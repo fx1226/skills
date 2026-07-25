@@ -1,0 +1,7 @@
+interface:
+  display_name: "SVN Code Review"
+  short_description: "Read-only SVN review of working copies and revisions"
+  default_prompt: "Use $svn-code-review to identify the SVN review mode, inspect the requested working-copy or repository changes without modifying them, and report evidence-backed findings by severity."
+
+policy:
+  allow_implicit_invocation: true
