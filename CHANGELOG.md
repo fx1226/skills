@@ -1,5 +1,10 @@
 # Changelog
 
+## Unreleased
+
+- Add `brain-memory` as a Basic Memory-specific governance skill for scoped retrieval, safe persistence, correction, consolidation, and explicit forgetting.
+- Add multi-project routing, MCP-to-CLI fallback, native memory-note structure, post-mutation verification, and behavioral regression scenarios.
+
 ## 0.1.0 - 2026-07-25
 
 Initial private release.

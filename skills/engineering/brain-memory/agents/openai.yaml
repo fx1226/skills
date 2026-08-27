@@ -1,0 +1,4 @@
+interface:
+  display_name: "Brain Memory"
+  short_description: "Govern long-term memory through Basic Memory"
+  default_prompt: "Use $brain-memory to retrieve and safely update durable knowledge in Basic Memory."
