@@ -4,6 +4,7 @@
 
 - Add `brain-memory` as a Basic Memory-specific governance skill for scoped retrieval, safe persistence, correction, consolidation, and explicit forgetting.
 - Add multi-project routing, MCP-to-CLI fallback, native memory-note structure, post-mutation verification, and behavioral regression scenarios.
+- Flatten the skill catalog so each skill package lives directly under `skills/`.
 
 ## 0.1.0 - 2026-07-25
 

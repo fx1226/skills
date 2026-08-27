@@ -8,19 +8,18 @@ Private collection of Agent Skills used for software engineering work.
 
 | Skill | Category | Purpose |
 |---|---|---|
-| [`brain-memory`](skills/engineering/brain-memory/SKILL.md) | Engineering | Evidence-backed long-term memory governance through Basic Memory |
-| [`svn-code-review`](skills/engineering/svn-code-review/SKILL.md) | Engineering | Read-only, evidence-backed code review for SVN working copies and repository revisions |
+| [`brain-memory`](skills/brain-memory/SKILL.md) | Memory | Evidence-backed long-term memory governance through Basic Memory |
+| [`svn-code-review`](skills/svn-code-review/SKILL.md) | Engineering | Read-only, evidence-backed code review for SVN working copies and repository revisions |
 
 ## Layout
 
 ```text
 skills/
-  engineering/
-    <skill-name>/
-      SKILL.md
-      agents/
-      references/
-      test-prompts.json
+  <skill-name>/
+    SKILL.md
+    agents/
+    references/
+    test-prompts.json
 ```
 
 Each Skill owns a small invocation file and discloses heavier reference material only when its workflow needs it.
