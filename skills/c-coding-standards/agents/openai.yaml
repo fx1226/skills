@@ -1,0 +1,7 @@
+interface:
+  display_name: "C Coding Standards"
+  short_description: "Write and review safe, portable, maintainable C"
+  default_prompt: "Use $c-coding-standards to write or review this C code against the project profile and authoritative safety baseline."
+
+policy:
+  allow_implicit_invocation: true

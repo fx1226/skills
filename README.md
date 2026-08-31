@@ -9,6 +9,7 @@ Private collection of Agent Skills used for software engineering work.
 | Skill | Category | Purpose |
 |---|---|---|
 | [`brain-memory`](skills/brain-memory/SKILL.md) | Memory | Evidence-backed long-term memory governance through Basic Memory |
+| [`c-coding-standards`](skills/c-coding-standards/SKILL.md) | Engineering | Project-aware rules for safe, portable, maintainable C code |
 | [`svn-code-review`](skills/svn-code-review/SKILL.md) | Engineering | Read-only, evidence-backed code review for SVN working copies and repository revisions |
 
 ## Layout
