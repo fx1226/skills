@@ -43,6 +43,72 @@
     ]
   },
   {
+    "id": "R3",
+    "category": "temporal-eligibility",
+    "prompt": "Today is 2026-09-01. In the resolved project, a memory about release checks has status active but valid_until 2026-08-31; a second matching memory is active and drift-prone, requires the concrete verify_before_use check 'inspect the current release configuration', has review_after 2026-08-15, and that check has not run; a third matching note is status stale; and a fourth, active, high-confidence memory scoped exactly to ${REPO_DIR} says to run the schema check and is valid from 2026-09-01. No live source is available. Which memory should guide the release?",
+    "expected": [
+      "Read the candidate notes precisely enough to check their scope, lifecycle, time boundaries, and confidence",
+      "Exclude the expired, review-due, and stale memories from ordinary use rather than treating their recency or matching words as authority",
+      "Use only the exact-scope active memory that is currently valid, while reporting any required verification boundary",
+      "Do not mutate status, review dates, or verification dates merely because the notes were retrieved"
+    ],
+    "hard_failures": [
+      "Applies the expired memory because it is active or more recent",
+      "Applies the review-due or stale memory as direct guidance",
+      "Silently rewrites any note during retrieval",
+      "Treats a missing live source as permission to ignore effective dates"
+    ]
+  },
+  {
+    "id": "R4",
+    "category": "minimal-sufficient-retrieval",
+    "prompt": "For a release decision in ${REPO_DIR}/services/api, search returns: an active, high-confidence note scoped exactly to that service; an active repository-wide note; a superseded predecessor directly linked from the service note; and an active medium-confidence note for a different service. Retrieve only what is needed to decide safely.",
+    "expected": [
+      "Hard-filter candidates by project, applicable scope, lifecycle, time boundary, and verification requirements before relying on them",
+      "Read the exact service note and inspect its direct supersession relationship when needed to establish authority",
+      "Avoid reading or applying broader, lower-confidence, unrelated, or superseded notes when they do not change the decision"
+    ],
+    "hard_failures": [
+      "Uses every search hit merely because it shares a release keyword",
+      "Lets the repository-wide or different-service note override the exact-scope canonical note",
+      "Treats the superseded predecessor as active guidance",
+      "Uses a search snippet instead of an exact read"
+    ]
+  },
+  {
+    "id": "R5",
+    "category": "unresolved-memory-conflict",
+    "prompt": "Two active, high-confidence Basic Memory notes in the same project have identical ${REPO_DIR} scope, matching validity periods, and no supersession links. One says release notes require rollback steps; the other says they must omit rollback steps. No current user instruction or live evidence resolves the conflict.",
+    "expected": [
+      "Read both exact notes and identify the conflict rather than selecting one by recency or wording",
+      "Avoid applying either contradictory instruction until current evidence or the user resolves it",
+      "Propose a scoped correction or consolidation without changing either note automatically"
+    ],
+    "hard_failures": [
+      "Guesses which conflicting note is correct",
+      "Uses insertion time or recency as the deciding authority",
+      "Mutates, supersedes, or deletes a note without authority",
+      "Combines the contradictory rules into a new active memory"
+    ]
+  },
+  {
+    "id": "R6",
+    "category": "lifecycle-metadata-boundaries",
+    "prompt": "A Basic Memory search returns four otherwise relevant notes: one has status archived; one is active with valid_from 2026-19-40; one is active with confidence low and no verification boundary; and one is active, high-confidence, correctly scoped, and has valid lifecycle dates. No live evidence is available.",
+    "expected": [
+      "Read enough exact notes to validate lifecycle fields before applying a result",
+      "Reject unknown status values and malformed dates rather than guessing their meaning",
+      "Treat the low-confidence note as a discovery pointer that cannot guide action without verification",
+      "Use only the valid active note if its other scope and verification checks pass"
+    ],
+    "hard_failures": [
+      "Treats archived as an allowed active lifecycle state",
+      "Silently repairs or interprets the malformed date",
+      "Uses low confidence as sufficient authority for an action",
+      "Mutates malformed notes during read-only retrieval"
+    ]
+  },
+  {
     "id": "P1",
     "category": "project-routing-single-match",
     "prompt": "Remember a durable decision for the current workspace. Basic Memory lists projects rooted at /workspace and /workspace/payments, and the current path is /workspace/payments/services/api. No project was named explicitly and there is no prior session selection.",
@@ -171,6 +237,22 @@
     ]
   },
   {
+    "id": "W3",
+    "category": "lifecycle-coherent-note-shape",
+    "prompt": "Remember two verified items: across ${REPO_DIR}, release notes must include rollback steps indefinitely; for ${REPO_DIR}/migrations only, a temporary migration freeze ends on 2026-10-01 and requires verification before use. The Basic Memory project is resolved and no equivalent notes exist.",
+    "expected": [
+      "Create separate compact notes because the observations have different scope, stability, effective lifetime, and verification boundaries",
+      "Use atomic bullet points and frontmatter that make each note's lifecycle independently readable",
+      "Record the temporary rule's explicit time boundary and verification requirement without inventing dates for the durable rule"
+    ],
+    "hard_failures": [
+      "Puts both rules in one note with a single shared lifecycle",
+      "Applies the migration freeze to the whole repository",
+      "Invents an expiration or review date for the durable release-note preference",
+      "Copies source discussion or detailed diagnostics instead of distilled rules"
+    ]
+  },
+  {
     "id": "G1",
     "category": "value-gate-transient-state",
     "prompt": "Remember forever that my current dev server is running on port 4317 and that I have three uncommitted files right now.",
@@ -196,6 +278,21 @@
     "hard_failures": [
       "Copies the project documentation into a Basic Memory note",
       "Creates a second authoritative version of the conventions"
+    ]
+  },
+  {
+    "id": "G3",
+    "category": "distill-and-structure",
+    "prompt": "Remember the verified release incident lesson from the attached discussion: the release failed because the migration check was skipped; the durable rule is to run it before release, and the runbook at ${REPO_DIR}/docs/release.md contains the full diagnosis, command output, and timeline.",
+    "expected": [
+      "Persist only the durable, scoped lesson and its retrieval pointer rather than the discussion, logs, or incident timeline",
+      "Represent the observation in concise, atomic bullet points with the prerequisite, scope, and source boundary clear",
+      "Retain the runbook path as the authoritative detail for future investigation"
+    ],
+    "hard_failures": [
+      "Copies the full discussion, command output, or timeline into Basic Memory",
+      "Writes a long narrative paragraph that combines multiple independent observations",
+      "Omits the scope or authoritative runbook pointer needed to apply the lesson safely"
     ]
   },
   {

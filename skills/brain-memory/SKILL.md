@@ -39,8 +39,8 @@ Working context remains in the current task and is never persisted merely for co
 
 1. **Resolve the interface and project.** Prefer MCP, fall back to `basic-memory tool`, and resolve an explicit Basic Memory project before any write.
 2. **Search before use or write.** Query with concrete anchors such as repository path, user wording, command, error text, feature, host, or known title. Preserve project identity and permalink with every result.
-3. **Read the exact note.** A search snippet is not authoritative. Read the complete candidate with frontmatter and confirm its project, permalink, scope, evidence, and content.
-4. **Judge and verify.** Apply the write gate, check scope, and verify drift-prone claims against live or authoritative evidence when possible.
+3. **Screen and read the exact note.** A search snippet is not authoritative. Bind the project and permalink, then read only the candidates needed to determine lifecycle eligibility, scope, evidence, and authority.
+4. **Judge, rank, and verify.** Apply hard eligibility checks before use, select the smallest sufficient non-conflicting set, and verify drift-prone claims against live or authoritative evidence when possible.
 5. **Create, update, consolidate, or explicitly forget.** Use the narrowest Basic Memory operation that preserves provenance and does not expand authority.
 6. **Read back after mutation.** Verify the same project and permalink. If readback fails or the result is ambiguous, report the operation as unverified and do not create another copy.
 
@@ -70,6 +70,14 @@ Before applying a note:
 - If verification is unavailable, say the fact came from memory and may be stale.
 - If current evidence conflicts, follow current evidence and correct or propose correcting the note.
 
+## Lifecycle, Time, and Retrieval
+
+Use a note only when its lifecycle and verification boundary make it applicable. `active` notes may guide work within their scope; `stale` notes are historical or signal a need to verify, but never guide work directly; `superseded` notes preserve history and never guide new work. A successful current verification is live evidence, not an implicit reactivation of the stale note. For a time-bounded claim, use explicit `valid_from` or `valid_until` only when supported by the source; do not infer dates.
+
+For `drift-prone` knowledge, always set a concrete `verify_before_use` check. Add `review_after` only when its date comes from the source or an explicitly authorized governance policy; otherwise leave it unset and require verification on every use. On or after a present `review_after` date, treat the note as stale until current evidence verifies it. Retrieval does not update status, verification dates, counters, or any other metadata; those changes require a separately authorized correction, consolidation, or maintenance operation.
+
+Filter candidates by project, scope, lifecycle, time boundary, and verification requirement before applying them. Then prefer current evidence, more specific scope, stronger source and confidence, closer retrieval cues, and fresher verification. Recency is only a weak final tie-breaker among otherwise equal episodic memories; it never overrides current evidence, source quality, or scope. If equally authoritative active memories conflict, apply neither and propose a scoped correction or consolidation without mutating either note.
+
 ## Write Gate
 
 Create or update only when the candidate is safe and at least one condition is true:
@@ -91,9 +99,20 @@ Do not store:
 
 Before creating, search the resolved project for the same identity and retrieval cues. Update the canonical note when one exists; do not create a competing authority.
 
+## Distill Before Persisting
+
+Persist the durable insight, not the conversation that produced it. Extract the smallest evidence-backed set of reusable observations, retaining only qualifiers needed to preserve scope, confidence, and safe future use.
+
+- Structure note bodies with concise headings and atomic bullet points; one bullet should express one fact, decision, preference, procedure step, constraint, warning, or correction.
+- Prefer a brief source pointer and a distilled finding over copied logs, transcripts, diffs, screenshots, or long narrative blocks. Keep the original artifact as the detailed record when it must be consulted again.
+- Preserve important retrieval cues, rationale, exceptions, and verification boundaries, but omit conversational history and supporting detail that does not change a future decision.
+- If the useful content cannot be stated concisely as scoped observations, keep it in its authoritative document and store at most a compact retrieval pointer or cross-project lesson.
+
 ## Basic Memory Note Contract
 
-Use Basic Memory-native Markdown. One note represents one coherent subject and may contain several atomic observations. Preserve these fields in frontmatter: `type`, `status`, `tags`, `memory_type`, `scope`, `source`, `stability`, `confidence`, `verify_before_use`, and `last_verified`.
+Use Basic Memory-native Markdown. One note represents one coherent lifecycle and may contain several atomic observations only when they share the same scope, status, stability, source boundary, and verification requirement. Split observations with different lifecycles into separate notes. Preserve these fields in frontmatter: `type`, `status`, `tags`, `memory_type`, `scope`, `source`, `stability`, `confidence`, `verify_before_use`, and `last_verified`. Add `valid_from`, `valid_until`, and `review_after` only when their dates are known and applicable. Every present lifecycle date, including `last_verified`, uses `YYYY-MM-DD`; an invalid date, a missing required `last_verified`, or `valid_from` later than `valid_until` makes the note discovery-only until an authorized correction. Never repair date metadata while retrieving it.
+
+Use only `active`, `stale`, or `superseded` for `status`. Set `confidence: high` for direct user preferences or verified applicable evidence, `medium` for corroborated but incomplete evidence that needs its stated boundary, and `low` only for a non-authoritative discovery pointer that must not guide action without verification.
 
 Use only these observation categories:
 
@@ -101,7 +120,7 @@ Use only these observation categories:
 preference | decision | procedure | fact | constraint | warning | correction
 ```
 
-Prefer `applies_to`, `derived_from`, `related_to`, and `supersedes` relations. Create a `[[wikilink]]` only for a real or intentionally established entity. Put exact retrieval cues in tags or observation text, and express non-applicability as a `constraint` or `warning`.
+Prefer `applies_to`, `derived_from`, `related_to`, and `supersedes` relations. Create a `[[wikilink]]` only for a real or intentionally established entity. Put exact retrieval cues in tags or observation text, and express non-applicability as a `constraint` or `warning`. Read a directly linked `supersedes` or `derived_from` note only when it is needed to establish the selected note's authority or safe application.
 
 ## Correction, Consolidation, and Forgetting
 
