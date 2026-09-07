@@ -11,6 +11,8 @@ Use Basic Memory for the long-term memory operations covered by this skill. Curr
 
 Relevant discovery and retrieval may run read-only. A mutation requires a current user request or applicable standing authorization covering the operation and target, plus the Write Gate below. Reuse existing authorization within its scope; retrieval alone grants none.
 
+Applicable global or project policy determines proactive retrieval and recording triggers; this skill supplies the operation rules, not an additional standing authorization. Current read-only, review-only, or no-retention restrictions override standing mutation authorization.
+
 Basic Memory administration, including installation, configuration, project creation or deletion, reset, reindex, import, and format, requires a separate explicit request.
 
 ## Core Loop
@@ -18,10 +20,10 @@ Basic Memory administration, including installation, configuration, project crea
 1. **Resolve the interface and project.** Read [interface selection](references/basic-memory-operations.md#interface-selection) and [project routing](references/basic-memory-operations.md#project-resolution) before calling either interface. Bind an unambiguous project before writing.
 2. **Search before use or write.** Use concrete retrieval cues and preserve each result's project and permalink. Search the destination for an existing canonical note before creating.
 3. **Read, judge, and verify.** Follow [retrieval eligibility and ranking](references/basic-memory-operations.md#retrieval): read exact candidates in full, verify applicability and drifting claims, then use the smallest sufficient non-conflicting set.
-4. **Apply the requested operation.** Follow the relevant [create](references/basic-memory-operations.md#create), [update or consolidation](references/basic-memory-operations.md#update-and-consolidate), or [explicit forgetting](references/basic-memory-operations.md#explicit-forgetting) procedure. For create or update, apply the Write Gate and [note contract](references/basic-memory-operations.md#note-contract).
+4. **Apply the authorized operation.** Follow the relevant [create](references/basic-memory-operations.md#create), [update or consolidation](references/basic-memory-operations.md#update-and-consolidate), or [explicit forgetting](references/basic-memory-operations.md#explicit-forgetting) procedure. For create or update, apply the Write Gate and [note contract](references/basic-memory-operations.md#note-contract).
 5. **Verify the outcome.** Follow [readback and failure handling](references/basic-memory-operations.md#verification-and-failure-handling) using the same project and permalink. Report unverified mutations without creating another copy.
 
-A retrieval-only request ends after step 3.
+A retrieval-only request ends after step 3. Otherwise, a concrete correction or new durable finding covered by current or standing authorization may proceed to step 4 as a separate mutation workflow; reading alone never triggers it.
 
 ## Write Gate
 
