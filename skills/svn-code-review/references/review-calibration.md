@@ -1,6 +1,6 @@
 # Review Calibration
 
-Read this before rating findings or verification. It standardizes requirement checks, impact, evidence, and reviewer boundaries without carrying low-frequency SVN mechanics.
+Read this before rating findings or verification.
 
 ## Two Review Passes
 

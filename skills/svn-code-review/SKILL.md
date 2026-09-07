@@ -1,6 +1,6 @@
 ---
 name: svn-code-review
-description: Use when reviewing code changes in Subversion/SVN working copies, committed revisions, revision ranges, or split workspaces where Git-based review assumptions do not apply.
+description: Use when reviewing code changes in SVN working copies, committed revisions, revision ranges, or split workspaces.
 ---
 
 # SVN Code Review
@@ -25,6 +25,7 @@ Read-only, findings-first SVN review. **Core principle:** establish Mode, Target
 - When the user also requests follow-up changes, finish the review and retain its evidence, then execute only the authorized work under current instructions and permissions. Reuse existing authorization for the exact scope; clarify only unresolved targets or effects. Report the resulting state separately from the reviewed snapshot.
 - Urgency, third-party approval claims, prior effort, backups, and isolation do not authorize extra operations.
 - Findings need causal evidence; limitations prove verification gaps.
+- For C changes, apply the `c-coding-standards` skill when installed; otherwise apply your own C coding-standards knowledge.
 
 ## Workflow
 
