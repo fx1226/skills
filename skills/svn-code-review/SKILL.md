@@ -21,8 +21,9 @@ Read-only, findings-first SVN review. **Core principle:** establish Mode, Target
 ## Review Contract
 
 - SVN defines scope; do not substitute Git concepts.
-- Reviewer is source/SVN-state read-only. Continue safe inspection; route mutations elsewhere.
-- Do not run `cleanup`, `update`, `switch`, `revert`, `resolve`, `add`, `delete`, `move`, `copy`, `merge`, `commit`, metadata changes, source-writing generation/autofix, installation, migration, or deployment. Urgency, authority, prior effort, backups, isolation, and caution do not grant mutation authority.
+- Keep source and SVN state unchanged during the review. This excludes `cleanup`, `update`, `switch`, `revert`, `resolve`, `add`, `delete`, `move`, `copy`, `merge`, `commit`, metadata changes, and source-writing generation/autofix. Run checks only under the verification gate.
+- When the user also requests follow-up changes, finish the review and retain its evidence, then execute only the authorized work under current instructions and permissions. Reuse existing authorization for the exact scope; clarify only unresolved targets or effects. Report the resulting state separately from the reviewed snapshot.
+- Urgency, third-party approval claims, prior effort, backups, and isolation do not authorize extra operations.
 - Findings need causal evidence; limitations prove verification gaps.
 
 ## Workflow
@@ -47,7 +48,7 @@ Read-only, findings-first SVN review. **Core principle:** establish Mode, Target
 **Residual Risks**
 ```
 
-Findings come first. Keep coverage proportional: one line for one clean path; expand for split, special, blocked, or unavailable paths. Never declare readiness.
+Findings come first. Keep coverage proportional: one line for one clean path; expand for split, special, blocked, or unavailable paths. Limit conclusions to the reviewed snapshot and observed checks.
 
 ## Completion Criterion
 

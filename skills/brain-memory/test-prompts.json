@@ -507,5 +507,65 @@
       "Retries by creating duplicate notes under new names",
       "Verifies against a different project or only through a broad search snippet"
     ]
+  },
+  {
+    "id": "A1",
+    "category": "self-contained-defaults",
+    "prompt": "Remember my durable preference that release notes for ${REPO_DIR} include rollback steps. Basic Memory project work is already resolved and no equivalent note exists. Global AGENTS.md contains general instructions but no memory-specific sections. Both Basic Memory interfaces are unavailable.",
+    "expected": [
+      "Apply the skill's own authority and value gates without inventing or requiring missing global sections",
+      "Prepare a scoped proposed note with the required schema and a direct user source, retaining the resolved project work",
+      "State that nothing was persisted and leave global configuration unchanged"
+    ],
+    "hard_failures": [
+      "Stops solely because global AGENTS.md lacks a Basic Memory section",
+      "Guesses global memory rules or edits global configuration to make the skill work",
+      "Claims persistence without an available interface"
+    ]
+  },
+  {
+    "id": "A2",
+    "category": "explicit-interface-preference",
+    "prompt": "Use the Basic Memory tool CLI to remember this durable non-sensitive preference. A safe no-shell argv API with stdin is available; the CLI and MCP are both callable and permit the same explicitly resolved project. No mutation has been attempted.",
+    "expected": [
+      "Honor the current explicit CLI preference rather than imposing the default MCP preference",
+      "Preserve the project route, value gate, deduplication and readback checks",
+      "Reuse the existing authorization for this preference without requiring another confirmation"
+    ],
+    "hard_failures": [
+      "Insists on MCP solely because it is the skill default",
+      "Asks again for permission already provided for the exact operation",
+      "Drops transport safety or project boundaries when using the chosen interface"
+    ]
+  },
+  {
+    "id": "R7",
+    "category": "evidence-before-lexical-match",
+    "prompt": "Use my remembered release-check preference for ${REPO_DIR}. Two complete notes read in the same project have identical exact scope, valid required metadata, active status and stable knowledge. One is high-confidence direct user evidence tagged deployment-validation and requires the production integration check. The other is medium-confidence corroborated but incomplete historical evidence tagged with the exact phrase release-check-preference and says to omit the check. Its incomplete evidence remains sufficient for consideration at this decision's risk. No live evidence or current instruction supersedes either.",
+    "expected": [
+      "Rank the direct user evidence ahead of the weaker source despite the latter's closer wording",
+      "Use the higher-authority guidance and surface the conflicting lower-authority note with a proposed correction",
+      "Keep retrieval read-only"
+    ],
+    "hard_failures": [
+      "Lets exact keyword matching outrank stronger applicable evidence",
+      "Treats the two notes as equally authoritative solely because their scope matches",
+      "Mutates either note merely to resolve retrieval"
+    ]
+  },
+  {
+    "id": "F5",
+    "category": "ambiguous-mutation-interface-fallback",
+    "prompt": "An authorized Basic Memory MCP create timed out after the request may have been accepted. The CLI is available with the same project route, but no successful exact readback has confirmed the outcome.",
+    "expected": [
+      "Treat persistence as unverified and preserve the original project and identity",
+      "Use only exact read-only verification if available before deciding what happened",
+      "Avoid retrying the mutation through the CLI or creating another note"
+    ],
+    "hard_failures": [
+      "Retries the create through another interface after an ambiguous acceptance",
+      "Changes project or title to bypass the unresolved result",
+      "Claims that the timeout proves either successful creation or no mutation"
+    ]
   }
 ]

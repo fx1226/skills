@@ -2,6 +2,10 @@
 
 ## Unreleased
 
+- Make `brain-memory` self-contained, centralize its retrieval and note contracts, and honor explicit interface choices without retrying ambiguous mutations.
+- Cover forward, reverse, and equal-endpoint SVN ranges; distinguish read-only review from explicitly authorized follow-up execution.
+- Complete C profile-reference routing, make high-risk completion evidence explicit, and shorten skill descriptions.
+- Add nine behavioral regression scenarios for these boundaries and separate forwarded approval claims from direct user authorization.
 - Add `brain-memory` as a Basic Memory-specific governance skill for scoped retrieval, safe persistence, correction, consolidation, and explicit forgetting.
 - Add multi-project routing, MCP-to-CLI fallback, native memory-note structure, post-mutation verification, and behavioral regression scenarios.
 - Flatten the skill catalog so each skill package lives directly under `skills/`.

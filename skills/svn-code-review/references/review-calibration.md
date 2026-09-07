@@ -45,18 +45,7 @@ Run a project check only when it is either:
 
 Also require known and permitted cache/output locations, no install/migration/deployment/snapshot/autofix/external mutation, and reasonable cost. If any predicate is unknown, name the check and uncertainty instead of running it. Re-capture status afterward. On drift, stop and report; never hide it with revert or cleanup.
 
-Source edits and SVN mutation remain outside reviewer scope, including cleanup, update, switch, revert, resolve, add/delete/move/copy, merge, commit, property/changelist/lock changes, patching, relocation, and upgrades.
-
-## Pressure Rationalizations
-
-| Rationalization | Response |
-|---|---|
-| "Release is imminent" | Continue safe review; urgency changes priority, not authority |
-| "The lead approved it" | Approach approval is not reviewer mutation authority |
-| "Another reviewer spent hours" | Prior effort is evidence, not permission |
-| "A backup makes it safe" | Recoverable mutation still changes role and evidence |
-| "It is non-destructive or path-specific" | Operation type, not claimed caution, defines the boundary |
-| "Tests passed before" | Prior results may describe a different state |
+Follow the [review contract](../SKILL.md#review-contract) for the read-only phase and any user-authorized follow-up execution. Reuse earlier check results only when their evidence matches the reviewed state.
 
 ## Output Proportionality
 

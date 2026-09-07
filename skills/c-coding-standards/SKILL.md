@@ -1,6 +1,6 @@
 ---
 name: c-coding-standards
-description: Write, modify, refactor, or review C source and headers using a project-aware baseline for language correctness, security, portability, interfaces, style, and verification. Use for hosted, POSIX, embedded/freestanding, kernel-like, or safety-critical C; do not use for C++ or claim formal MISRA/CERT/ISO certification from ordinary coding or review.
+description: Write, modify, or review C source and headers against the project's language, platform, safety, and style requirements. Applies to hosted, embedded, and kernel C; excludes C++ implementation.
 ---
 
 # C Coding Standards
@@ -42,7 +42,7 @@ Read [core rules](references/core-rules.md) for every task.
 
 - For new code, refactoring, naming, comments, headers, or layout, read [style and organization](references/style-and-organization.md).
 - For integers, pointers, arrays, strings, allocation, resources, concurrency, untrusted data, serialization, hardware, or portability risk, read [safety and portability](references/safety-and-portability.md).
-- For POSIX, freestanding/embedded, Linux kernel, safety-critical, legacy, third-party, or generated code, read [profile overlays](references/profile-overlays.md).
+- Read the matching environment sections in [profile overlays](references/profile-overlays.md), including Hosted ISO C for ordinary applications and libraries. Also read its parser/protocol section for untrusted parsers or protocol code, and its legacy, third-party, or generated-code sections when those boundaries apply.
 - Before choosing or reporting checks, read [verification](references/verification.md).
 - Read [sources and rationale](references/sources.md) only when justifying a rule, resolving a standards conflict, checking versions, or maintaining this skill.
 
@@ -65,4 +65,4 @@ Read [core rules](references/core-rules.md) for every task.
 
 ## Completion
 
-Complete only when the applicable C profile is honored, changed interfaces have explicit contracts, high-risk rules were considered, first-party and external code boundaries are accounted for, verification claims match observed commands, and any unverified target or compliance claim is stated as a limitation.
+Complete only when the applicable C profile is honored, changed interfaces have explicit contracts, each applicable high-risk check has an evidence-backed conclusion or an explicit verification gap, first-party and external code boundaries are accounted for, and verification claims match observed commands. State unverified target or compliance claims as limitations; keep the report proportional to the change.

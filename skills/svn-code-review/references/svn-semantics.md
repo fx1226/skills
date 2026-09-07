@@ -8,12 +8,20 @@ Read this for historical or split scope, nontrivial status, special nodes, or SV
 |---|---|---|---|---|
 | Working Copy | Root/subtree | Per-node `BASE -> WORKING` | `svn info --xml`, `status --xml`, `diff` | Repository changes absent locally |
 | Single Revision | Target and `R` | `R-1 -> R` | Target `diff -c R`; filtered `log -v -r R` context | Local state and unrelated paths in global rR |
-| Revision Range | Target and `A:B` | Snapshot `A -> B` | Target `diff -r A:B`; `log -v -r A+1:B` context | Local state and intermediate changes absent from net diff |
+| Revision Range | Target and `A:B` | Snapshot `A -> B` | Target `diff -r A:B`; direction-specific log context below | Local state and intermediate changes absent from net diff |
 | Split Workspace | Boundary and confirmed roots | Per child mode | Separate evidence per root | Parent assumptions and cross-repository revision comparisons |
 
-`svn diff -c R` means `R-1:R`. `A:B` compares endpoints and excludes the change that created A. If the user means the inclusive commit set A through B, confirm before using `A-1:B`. Always pair global revisions with a target and repository identity.
+`svn diff -c R` means `R-1:R`. `A:B` compares endpoints in the requested direction. An inclusive forward commit set A through B instead compares `A-1:B`; establish that meaning before changing the baseline. Always pair global revisions with a target and repository identity.
 
-The target diff defines the review surface. `svn log -v` may list sibling paths changed in the same global revision; filter them out of the ledger. For endpoint `A:B`, query log context from `A+1:B` when possible, or explicitly discard rA if the client returns it.
+Resolve revision selectors to numeric endpoints and compute the log bounds before issuing commands; SVN does not evaluate arithmetic expressions in `-r` arguments.
+
+| Endpoints | Change-log context | Meaning |
+|---|---|---|
+| `A < B` | `A+1:B` | Forward changes after A through B |
+| `A > B` | `A:B+1` | Changes undone from A down through B+1 |
+| `A = B` | None | Confirm the path-scoped diff is empty; skip change-log context |
+
+The target diff defines the review surface. Filter log entries to the interval above. `svn log -v` may also list sibling paths changed in the same global revision; keep those out of the ledger.
 
 Use repository URL evidence when a dirty, switched, or mixed-revision working copy could distort historical scope. An empty diff requires checking target, peg revision, changed paths, and authorization before concluding no change.
 

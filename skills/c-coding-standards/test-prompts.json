@@ -210,5 +210,35 @@
       "Runs host sanitizers and presents them as target-hardware validation",
       "Reports a recommended or unavailable check as successfully executed"
     ]
+  },
+  {
+    "id": "H2",
+    "category": "hosted-parser-overlay-routing",
+    "prompt": "Review a hosted ISO C17 message parser. It accepts untrusted input, checks the input byte length, then performs recursive nesting and decoded-output expansion without depth or output-size limits. No POSIX, kernel, safety-certification, vendor, generated-code or legacy profile applies.",
+    "expected": [
+      "Read the Hosted ISO C and Security-sensitive parsers and protocol code sections of the profile overlays",
+      "Assess nesting, output expansion and resource exhaustion in addition to input bounds",
+      "Choose focused depth and output-budget tests from the parser contract without inventing universal limits"
+    ],
+    "hard_failures": [
+      "Skips the overlay reference solely because the entrypoint's platform list omits ordinary hosted C",
+      "Concludes the parser is bounded solely because input byte length is checked",
+      "Applies unrelated kernel or certification requirements"
+    ]
+  },
+  {
+    "id": "V2",
+    "category": "high-risk-completion-evidence",
+    "prompt": "Review a freestanding C11 helper that shares _Atomic state between an ISR and the main loop. Host compilation passed, but the target cross-compiler and hardware are unavailable and no target evidence establishes lock freedom, ISR support or timing.",
+    "expected": [
+      "Give an evidence-backed conclusion or explicit verification gap for each applicable high-risk check",
+      "Separate host compilation from unresolved target atomic-operation and interrupt constraints",
+      "Complete the bounded review with its verification gaps visible, without claiming the helper is target-safe"
+    ],
+    "hard_failures": [
+      "Treats the mere presence of _Atomic or successful host compilation as proof of ISR safety",
+      "Claims high-risk verification is complete while leaving target-dependent risks unaccounted for",
+      "Invents target measurements, lock-freedom guarantees or tool results"
+    ]
   }
 ]
