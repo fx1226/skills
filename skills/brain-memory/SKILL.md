@@ -18,12 +18,12 @@ Basic Memory administration, including installation, configuration, project crea
 ## Core Loop
 
 1. **Resolve the interface and project.** Read [interface selection](references/basic-memory-operations.md#interface-selection) and [project routing](references/basic-memory-operations.md#project-resolution) before calling either interface. Bind an unambiguous project before writing.
-2. **Search before use or write.** Use concrete retrieval cues and preserve each result's project and permalink. Search the destination for an existing canonical note before creating.
-3. **Read, judge, and verify.** Follow [retrieval eligibility and ranking](references/basic-memory-operations.md#retrieval): read exact candidates in full, verify applicability and drifting claims, then use the smallest sufficient non-conflicting set.
+2. **Locate relevant notes.** Read a known, routed identifier directly; otherwise follow the [retrieval strategy](references/basic-memory-operations.md#retrieval). Deduplicate candidates by project and permalink. Search the destination for an equivalent canonical note before creating.
+3. **Read, judge, and verify.** Read exact candidates in full and apply the [eligibility, reuse, and stopping rules](references/basic-memory-operations.md#retrieval). Use sufficient non-conflicting evidence for every part of the question; expand through relations only to fill a concrete gap.
 4. **Apply the authorized operation.** Follow the relevant [create](references/basic-memory-operations.md#create), [update or consolidation](references/basic-memory-operations.md#update-and-consolidate), or [explicit forgetting](references/basic-memory-operations.md#explicit-forgetting) procedure. For create or update, apply the Write Gate and [note contract](references/basic-memory-operations.md#note-contract).
 5. **Verify the outcome.** Follow [readback and failure handling](references/basic-memory-operations.md#verification-and-failure-handling) using the same project and permalink. Report unverified mutations without creating another copy.
 
-A retrieval-only request ends after step 3. Otherwise, a concrete correction or new durable finding covered by current or standing authorization may proceed to step 4 as a separate mutation workflow; reading alone never triggers it.
+A retrieval-only request ends after step 3, including when a bounded search leaves an explicit evidence gap. A concrete correction or new durable finding covered by current or standing authorization may proceed to step 4 as a separate mutation workflow. No durable change is a normal outcome; reading alone never triggers a write.
 
 ## Write Gate
 
@@ -33,7 +33,7 @@ Persist only knowledge likely to change future work, with a clear scope and trac
 - a retrieval pointer that adds value beyond maintained project documentation;
 - a distinction that prevents confusing similar repositories, paths, hosts, devices, branches, users, or products.
 
-Keep maintained project facts in their authoritative documents; retain a pointer or a distinct lesson when useful. Temporary ports, process state, uncommitted-file counts, temporary branches, draft plans, raw transcripts, and copied logs remain task context. An explicit remember request still needs to pass this durability gate.
+Keep maintained project facts in their authoritative documents; retain a pointer or a distinct lesson when useful. Temporary ports, process state, working-tree state, draft plans, raw transcripts, and copied logs remain task context. Keep progress, blockers, and next steps in the session or an authorized handoff mechanism. An explicit remember request still needs to pass this durability gate.
 
 Retain high-sensitivity personal information only when the user explicitly requests the minimum necessary retention. Never put secrets in Basic Memory searches, titles, tags, relations, bodies, or CLI arguments.
 
@@ -41,6 +41,6 @@ Distinguish durable preferences from past workarounds. User emphasis may affect 
 
 ## Completion
 
-Complete when routing is unambiguous, every used note was read in full and met retrieval eligibility, each mutation stayed within authorization, each write passed the Write Gate, and the outcome was verified against the same project and permalink. Distinguish persisted, proposed, historical, deleted, and unverified outcomes as applicable.
+Complete retrieval when each used note was read in full and met eligibility, and the question is covered or the remaining evidence gap is explicit. Complete a mutation only when routing and authorization are clear, the Write Gate passed where required, and the outcome was verified against the same project and permalink. Distinguish persisted, proposed, historical, deleted, and unverified outcomes as applicable.
 
 Read [research grounding](references/research-grounding.md) only when auditing or extending this skill.
