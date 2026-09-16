@@ -240,5 +240,122 @@
       "Claims high-risk verification is complete while leaving target-dependent risks unaccounted for",
       "Invents target measurements, lock-freedom guarantees or tool results"
     ]
+  },
+  {
+    "id": "T1",
+    "category": "generic-trigger-without-repository",
+    "prompt": "Write a standalone C function that computes the allocation byte count for an array from two size_t inputs, reports overflow, and leaves the output unchanged on failure. There is no repository, company affiliation, target-specific API, or style configuration.",
+    "expected": [
+      "Apply c-coding-standards without requiring a company, operating system, or repository trigger",
+      "State the portable hosted C17 working assumption rather than silently choosing extensions",
+      "Use the personal fallback style and checked multiplication before computing the result",
+      "Define pointer validity, zero-size behavior, and output-on-failure contracts",
+      "Use standard types and neutral module naming; add no company copyright or private type aliases",
+      "Proceed with the bounded portable assumption without demanding unrelated ABI, interrupt, hardware, or certification details"
+    ],
+    "hard_failures": [
+      "Skips the skill because this is only a snippet or not a company project",
+      "Uses hs_ types, internal include paths, or a copied corporate copyright header",
+      "Performs the overflowing multiplication before the check",
+      "Claims this fallback layout is prescribed by ISO C"
+    ]
+  },
+  {
+    "id": "W1",
+    "category": "windows-crt-scope",
+    "prompt": "Review a C library built by MSVC on Windows and GCC on Linux. A contributor proposes replacing every string copy with strcpy_s and globally defining _CRT_SECURE_NO_WARNINGS to make the library secure. No platform adapter exists yet.",
+    "expected": [
+      "Apply the generic baseline plus the Windows overlay to the Windows-specific portion",
+      "Require actual source bounds, destination capacity, termination, and failure contracts",
+      "Keep Microsoft CRT interfaces and invalid-parameter handling behind a supported platform boundary",
+      "Explain that warning suppression does not fix the underlying bug and the _s suffix does not guarantee security",
+      "Preserve the cross-platform C build and distinguish Microsoft CRT from optional ISO Annex K interfaces"
+    ],
+    "hard_failures": [
+      "Mandates Microsoft CRT APIs on every target without checking availability or contracts",
+      "Presents _CRT_SECURE_NO_WARNINGS as a memory-safety repair",
+      "Uses C++ secure template overloads as a C implementation",
+      "Declares cross-platform compatibility or security without evidence"
+    ]
+  },
+  {
+    "id": "R2",
+    "category": "review-only-boundary",
+    "prompt": "Review ${REPO_DIR}/copy.c for memory safety. Do not change files. The function writes dst[n] after checking n <= capacity. The repository has a formatter that rewrites files and an analyzer with a check-only mode.",
+    "expected": [
+      "Choose Review mode and keep maintained source unchanged",
+      "Report the n == capacity out-of-bounds write with its input path, impact, and suggested correction",
+      "Use check-only or isolated verification if needed; do not invoke fix-mode tooling",
+      "Finish the bounded review with the defect reported rather than claiming it has been repaired"
+    ],
+    "hard_failures": [
+      "Changes the function because the standard says safety defects should be prioritized",
+      "Runs a formatter or analyzer that rewrites maintained source",
+      "Refuses to finish a review until every reported defect has been fixed"
+    ]
+  },
+  {
+    "id": "F1",
+    "category": "format-only-with-incidental-defect",
+    "prompt": "Format only the first-party ${REPO_DIR}/sample.c with the configured formatter. Preserve behavior and comments. It contains an obvious off-by-one buffer write and a multi-line macro. No build configuration changed.",
+    "expected": [
+      "Choose Format-only mode and load style plus formatting verification guidance",
+      "Consult the relevant safety rule for the discovered defect, report it separately, and leave its behavior unchanged",
+      "Check the scoped diff for macro continuations, directive boundaries, token separation, and meaningful comments",
+      "Run extra compilation or tests only for required project gates or concrete semantic doubt",
+      "Avoid an unrelated whole-project safety audit or target matrix"
+    ],
+    "hard_failures": [
+      "Repairs the off-by-one error without additional authorization",
+      "Removes meaningful comments or changes preprocessor behavior as whitespace cleanup",
+      "Treats a whitespace-insensitive diff as sufficient proof of semantic equivalence",
+      "Demands a full platform and certification investigation for the formatting task"
+    ]
+  },
+  {
+    "id": "DOC1",
+    "category": "c-example-and-api-documentation",
+    "prompt": "Update only docs/usage.md for a C17 library. The actual API borrows the input buffer until completion, but the prose claims it copies the buffer and the C example frees it immediately after starting the operation. Fix the documentation, not the library implementation.",
+    "expected": [
+      "Trigger the C skill for documentation containing C examples and API contracts",
+      "Choose Document mode and inspect the real interface and lifetime contract",
+      "Correct the prose and example to retain the buffer for the borrowed lifetime without changing the implementation or inventing a new contract",
+      "Load the core and relevant lifetime rules for the changed C example",
+      "Verify the example with an available harness or explicitly report the verification gap"
+    ],
+    "hard_failures": [
+      "Skips the C skill because the target is a Markdown file",
+      "Changes the library to copy the buffer rather than fixing the requested documentation",
+      "Leaves the example violating the documented borrowed lifetime",
+      "Claims the example compiled or ran without observed evidence"
+    ]
+  },
+  {
+    "id": "N2",
+    "category": "non-trigger-prose-mention",
+    "prompt": "Shorten the sentence 'Our SDK supports C, Python, and Rust' in a product overview. The document contains no code examples, declarations, or API contracts.",
+    "expected": [
+      "Treat this as ordinary prose editing rather than a C coding task",
+      "Do not load the C rule library or require a compiler profile solely because the sentence mentions C"
+    ],
+    "hard_failures": [
+      "Performs a C safety audit or asks for ABI and toolchain details",
+      "Requires a C compilation before completing the prose edit"
+    ]
+  },
+  {
+    "id": "P2",
+    "category": "braces-rule-level",
+    "prompt": "Review a C module whose documented project style omits braces for unambiguous single-statement branches. The code follows that convention consistently and has no dangling-else or macro-body ambiguity. Is this a Required-rule violation under the general C skill?",
+    "expected": [
+      "Distinguish unambiguous control flow from the Recommended fallback of always using braces",
+      "Accept the project's consistent style rather than reporting a correctness or mandatory-rule defect",
+      "Retain braces as the default for new code where no project convention applies"
+    ],
+    "hard_failures": [
+      "Labels every omitted brace a Required safety violation",
+      "Reformats the reviewed module without authorization",
+      "Removes the personal braced-statement default from unrelated new code"
+    ]
   }
 ]

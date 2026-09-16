@@ -1,6 +1,6 @@
 # Sources and Rationale
 
-Use this reference when a rule needs provenance, standards versions are in question, or this skill is being maintained. URLs and status were checked on 2026-08-31.
+Use this reference when a rule needs provenance, standards versions are in question, or this skill is being maintained. The original source catalog was checked on 2026-08-31. On 2026-09-16, WG14 status, Linux coding style, CERT's public rule listing, and the OpenHarmony and Microsoft guidance below were consulted for this revision; this does not revalidate every unchanged link or claim formal compliance.
 
 ## What “official C standard” means
 
@@ -23,7 +23,7 @@ The repository's declared edition governs the code. “Current standard is C23�
 ## Security and high-assurance sources
 
 - [ISO/IEC TS 17961:2013 — C secure coding rules](https://www.iso.org/standard/61134.html) and [Cor 1:2016](https://www.iso.org/standard/72086.html): ISO secure-coding rules and diagnostic examples. The specification explicitly does not prescribe coding style.
-- [SEI CERT C Coding Standard](https://wiki.sei.cmu.edu/confluence/display/c): public, community-maintained rules and recommendations grouped around preprocessor, declarations, expressions, integers, floating point, arrays, strings, memory, I/O, environment, signals, errors, APIs, concurrency, and platform topics. Use current leaf pages when an exact CERT mapping is required.
+- [SEI CERT C Coding Standard](https://cmu-sei.github.io/secure-coding-standards/sei-cert-c-coding-standard/) and its [public rule listing](https://cmu-sei.github.io/secure-coding-standards/sei-cert-c-coding-standard/rules/): public, community-maintained rules and recommendations grouped around preprocessor, declarations, expressions, integers, floating point, arrays, strings, memory, I/O, environment, signals, errors, APIs, concurrency, and platform topics. Use current leaf pages when an exact CERT mapping is required.
 - [How the SEI CERT C standard is organized](https://wiki.sei.cmu.edu/confluence/display/c/How%2Bthis%2BCoding%2BStandard%2Bis%2BOrganized): distinction between normative rules and recommendations, rule identifiers, examples, risk assessment, and related guidance.
 - [MISRA C:2025](https://misra.org.uk/product/misra-c2025/): current licensed industry guidance for critical systems. The text and formal compliance process are proprietary/licensed. This skill does not reproduce its rule text and cannot establish MISRA compliance. A real MISRA claim requires the selected edition, licensed rules, project classification, tool mapping, deviations, and assurance evidence.
 
@@ -36,6 +36,27 @@ CERT, TS 17961, and MISRA are not interchangeable with ISO C language conformanc
 - [POSIX.1-2024](https://pubs.opengroup.org/onlinepubs/9799919799/): authoritative API and environment contract when a project targets POSIX. It does not govern freestanding, Windows, kernel, or arbitrary embedded targets.
 
 The disagreement between Linux and GNU formatting is useful evidence: style must be selected by project, not presented as one official universal answer.
+
+## Public organizational guidance and selection decisions
+
+- [OpenHarmony C Coding Style Guide](https://github.com/openharmony/docs/blob/master/zh-cn/contribute/OpenHarmony-c-coding-style-guide.md) ([official Gitee repository](https://gitee.com/openharmony/docs/blob/master/zh-cn/contribute/OpenHarmony-c-coding-style-guide.md)): public project guidance from the OpenHarmony ecosystem, not a claim about every Huawei product. Consulted sections include purpose/principles/exceptions, naming, function-like macros, and layout. Adopt meaningful names, narrow and explicit interfaces, third-party style preservation, four-space fallback indentation, K&R braces, and braced controlled statements. Do not universally import CamelCase, `g_` prefixes, its 120-column limit, or its typedef conventions.
+- [Microsoft: Security Features in the CRT](https://learn.microsoft.com/en-us/cpp/c-runtime-library/security-features-in-the-crt?view=msvc-170): adopt explicit buffer capacities, termination, parameter validation, and error-contract awareness. The documentation explicitly says secure functions detect errors rather than correct the caller's mistake. Keep `_s` APIs, invalid-parameter handlers, and compatibility macros within the Microsoft profile; do not make them requirements for portable ISO C.
+
+The skill is an engineering synthesis, not a concatenation or majority vote among guides. A candidate rule must improve correctness, safety, readability, or verification; conflicting stylistic choices get one explicit default, and platform assumptions remain in overlays.
+
+| Topic | Selected baseline | Rationale / boundary |
+|---|---|---|
+| Language and UB | Selected ISO edition and target contract | WG14/ISO semantics, not a vendor style preference |
+| Bounds, integers, ownership, failures | Core and safety references | CERT concern areas and explicit API contracts; not a complete CERT rule mapping |
+| Indentation and braces | Four spaces; function brace on next line; other opening braces attached | Coherent personal default informed by OpenHarmony; existing project configuration wins |
+| Naming | `snake_case`, semantic units, public module prefixes | Readable Linux-style naming without kernel-specific type/API requirements |
+| Line length | Soft 100-column limit | Personal compromise, not attributed to ISO or a vendor mandate |
+| Controlled statements | Braces by default | OpenHarmony-style maintainability choice; kernel-specific exceptions stay in the kernel profile |
+| Comments | Intent, invariants, and contracts | No comment-percentage quotas, empty function-header templates, or blanket language ban |
+| Strings | Capacity, termination, overlap, and failure contract first | Neither `strncpy`, `strlcpy`, nor `_s` is a universal safe replacement |
+| Platform details | Explicit overlays | No company types, copyright notices, internal tools, or approval workflows in the generic baseline |
+
+Retain source links and selection rationale instead of copying entire vendor guides. Source wording is evidence, not an instruction to change the user's workflow.
 
 ## Tool documentation
 

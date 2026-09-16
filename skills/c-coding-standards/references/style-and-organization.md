@@ -12,7 +12,7 @@ Inspect, in order:
 4. generated/vendor markers and generator templates;
 5. public API, ABI, and include-layout constraints.
 
-Do not combine Linux, GNU, embedded-vendor, and fallback conventions into a hybrid. Consistency within the target component matters more than personal preference.
+Do not switch between Linux, GNU, vendor, and personal conventions within a component. The fallback below deliberately selects one consistent set of choices from multiple sources; it does not require simultaneous conformance to conflicting external guides. Consistency within an existing target component matters more than personal preference.
 
 ## Fallback style when the project has none
 
@@ -20,11 +20,13 @@ These are `Recommended` defaults, not universal defects:
 
 - UTF-8 source, LF line endings, no trailing whitespace, and a final newline.
 - Four spaces per indentation level; do not mix tabs and spaces for indentation.
-- K&R braces for blocks, with braces for every controlled statement.
+- Function opening braces on a separate line; other opening braces on the same line as the controlling statement or type declaration (K&R). Use braces for every controlled statement, including a single statement.
+- Keep the return type and function name on the same line. Bind a pointer's `*` to its declarator (`char *buffer`).
+- Indent `case` and `default` labels one level inside `switch`, and their statements one further level. Use a consistent four-space continuation indent when natural alignment is awkward.
 - One statement and normally one declaration per line.
 - A soft line limit of 100 columns. Break at semantic boundaries and keep related operands visibly grouped; exceed the limit when splitting would obscure a literal, diagnostic, URL, or searchable string.
 - Spaces around binary operators and after commas; no spaces just inside parentheses. Keep unary operators and member access next to their operands.
-- Let a formatter enforce layout after behavior is correct. Do not hand-align large regions with fragile columns of spaces.
+- Use the configured formatter within the selected task boundary. Avoid fragile manual column alignment.
 
 ## Naming
 
@@ -44,7 +46,7 @@ Do not default to Hungarian notation, `g_`/`s_` type prefixes, `fn_`, or company
 
 Avoid reserved identifier space:
 
-- never invent identifiers containing a double underscore;
+- avoid double underscores anywhere as a conservative C/C++ interoperability convention; ISO C's unconditional double-underscore reservation concerns identifiers beginning with `__`;
 - never begin an ordinary identifier with `_` followed by an uppercase letter;
 - never create a leading-underscore identifier at file scope;
 - do not define names reserved by the selected C implementation or platform;
@@ -90,13 +92,7 @@ Write functions around one responsibility and one level of abstraction. Use earl
 
 Keep loop control in the loop construct when practical. Do not modify a counter unexpectedly inside the body. Prefer readable state machines or extracted helpers to deep interleaving of loops and conditions.
 
-For `switch`:
-
-- decide whether the domain is open or closed;
-- handle invalid external values explicitly;
-- mark intentional fallthrough in the form recognized by the toolchain;
-- do not add an empty `default` merely to silence a diagnostic;
-- preserve compiler help for exhaustive enums when the project relies on it.
+For semantic `switch` review, use CTL-02 in [core rules](core-rules.md#control-flow-errors-and-concurrency). Layout-only work preserves existing branch behavior and fallthrough annotations.
 
 ## Declarations and constants
 
@@ -123,12 +119,8 @@ Comments explain information the code cannot express clearly:
 
 Prefer comments near the maintained fact. Delete stale comments when code changes. Do not require a comment percentage, repeat each statement in prose, retain version-control history in file banners, or add template sections filled with “none.” Public API documentation should describe observable behavior rather than implementation steps.
 
-Use `/* ... */` for portability to older C modes when the project requires it. `//` is standard since C99; it is not a universal defect in C99 and later projects.
+Use `/* ... */` for portability to older C modes when the project requires it. `//` is standard since C99; it is not a universal defect in C99 and later projects. Without a local convention, use `/* ... */` for API/block documentation and either supported form for short comments, consistently within the file. Follow the project's human language; Chinese comments are not a C correctness defect when the toolchain accepts the source encoding. Do not copy a reference organization's copyright notice or invent ownership/license information.
 
 ## Formatting boundaries
 
-- Reformat only the changed region unless the user or project requests a broader normalization.
-- Keep generated files untouched and change their templates.
-- Preserve vendor style in narrow downstream patches so future updates remain reviewable.
-- Separate formatting-only changes from behavioral changes when repository practice values blame/diff clarity.
-- Never hide a safety fix inside a repository-wide whitespace rewrite.
+Reformat the requested region; wider normalization needs user or project direction. Keep cosmetic changes separate from behavioral changes for review clarity. For external/generated files, use the [ownership policy](profile-overlays.md#third-party-and-generated-code); for behavior-preservation checks, use [Verification](verification.md#select-checks-by-task-mode).

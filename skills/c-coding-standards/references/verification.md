@@ -2,16 +2,18 @@
 
 Read before selecting or reporting checks. Verification must match the project's language profile, target, build system, and side-effect permissions.
 
-## Evidence order
+## Select checks by task mode
 
-1. Use documented repository commands and CI configuration.
-2. Compile with the selected language mode and real project flags.
-3. Run focused unit/integration tests, then broader suites proportional to the change.
-4. Apply the project's formatter and lint/static-analysis targets.
-5. Use dynamic analysis on supported executable builds.
-6. Cross-build and test on the actual target or a justified emulator/harness.
+Use maintained project commands and required gates first. Select additional checks by changed behavior and risk; the sections below are a menu, not a mandatory full-toolchain run for every task.
 
-Do not invent a replacement workflow when maintained commands exist. Do not change `-std`, enable extensions, disable warnings, add suppressions, or alter optimization solely to make a check pass.
+| Mode | Proportional checks and completion evidence |
+|---|---|
+| Review | Inspect contracts and reachable paths; run focused checks where they can resolve a finding. Keep maintained source unchanged, using isolated build outputs where needed. Report unresolved evidence gaps. |
+| Implement/change | Build in the selected mode, test affected behavior/boundaries, and use relevant configured analyzers. Extend to broader suites or targets when impact or project gates require them. |
+| Format-only | Check formatter conformance and the scoped diff. Preserve tokens and preprocessing behavior, especially macro continuations, directive boundaries, token separation, and meaningful comments. Compile/test if the transformation leaves semantic doubt; a whitespace-insensitive diff alone is not proof. |
+| Document | Match API prose against declarations and implementation. For changed C examples, compile/test a representative harness where available, or state the verification gap. Prose-only changes do not require an unrelated target matrix. |
+
+Stop once required gates and risk-relevant checks are satisfied, unless a new change, failure, or unresolved question justifies more work. Keep the language mode, extensions, diagnostics, and optimization policy intact rather than weakening them to obtain a pass.
 
 ## Compiler diagnostics
 
@@ -37,7 +39,7 @@ Prefer the repository's configured analyzer and rule profile. When absent and su
 - Triage findings against reachable code and interface contracts.
 - Record analyzer version and configuration.
 - Keep suppressions local, justified, and reviewable; do not globally disable a category to hide one false positive.
-- No analyzer is complete or sound for all C behavior. A clean report is not proof of safety.
+- Interpret results within the analyzer's documented coverage and limitations.
 
 ## Dynamic analysis
 
@@ -69,17 +71,17 @@ Use property tests or fuzzing for parsers and state machines when a deterministi
 
 ## Portability and target matrix
 
-Build against every supported C mode, compiler family, target data model, feature configuration, and endianness that materially changes behavior. If the full matrix is unavailable, run the safe subset and state what remains unverified.
+Exercise supported C modes, compiler families, data models, feature configurations, and endianness affected by the change, plus any matrix required by project gates. If required targets are unavailable, run the safe subset and identify the remaining target-specific risks. Unchanged formatting or prose does not by itself justify a full matrix.
 
 For freestanding and safety-sensitive targets, supplement host tests with the actual cross-compiler, linker map/resource analysis, target or simulator execution, timing/stack evidence, and hardware-specific tests. Do not report host compilation as target validation.
 
-## Formatting and generated code
+## Generated-code verification
 
-Run the configured formatter only on intended first-party files or changed ranges. Verify that generated outputs are reproducible from the edited generator/template. Recheck the working tree after tools that may rewrite files.
+When an authorized change affects a generator/template, regenerate with the documented toolchain and check reproducibility. Apply the [ownership policy](profile-overlays.md#third-party-and-generated-code) when selecting editable inputs.
 
 ## Verification report
 
-Report:
+Keep the report proportional: include only applicable items, with material gaps explicit.
 
 - exact command or maintained target;
 - tool/compiler version when material;
@@ -89,4 +91,8 @@ Report:
 - whether any suppression or deviation was used;
 - residual risks, especially missing cross-compiler, hardware, analyzer, coverage, or licensed compliance evidence.
 
-Never convert “recommended,” “configured,” “not run,” or “unavailable” into “passed.”
+Never convert “recommended,” “configured,” “not run,” or “unavailable” into “passed.” Compilation, tests, analysis, and sanitizers provide complementary evidence, not proof that undefined behavior or vulnerabilities are absent.
+
+## Assurance claims
+
+An ordinary review or tool pass cannot establish full ISO/CERT conformance, MISRA compliance, safety integrity, or certification. Such claims need the exact applicable edition, defined scope, rule mapping, tools and evidence, documented deviations, and the authorized assurance process. Report the bounded checks performed and missing evidence; continue useful review without inventing compliance. For a project requiring formal assurance, also read its [high-assurance overlay](profile-overlays.md#safety-critical-or-high-assurance).

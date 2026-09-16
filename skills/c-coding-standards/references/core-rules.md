@@ -1,161 +1,70 @@
 # Core C Rules
 
-Read this reference for every writing, modification, or review task.
+Baseline for implementation and correctness/security review. For API-contract prose, read **Interfaces**; format-only work uses the style reference instead. Rule IDs are stable labels within this skill, not external compliance identifiers.
 
 ## Rule levels
 
-- **Required**: a language, safety, security, or explicit project constraint. Deviate only with a documented, reviewed reason and compensating evidence.
-- **Recommended**: the default when no stronger project evidence applies. A consistent local alternative is acceptable.
-- **Profile-specific**: required only after the relevant environment or assurance profile is selected.
+- **Required**: language, safety, or explicit project constraints. Language semantics and actual target/API contracts cannot be waived by approval. Discretionary project-policy exceptions need documented rationale and compensating evidence.
+- **Recommended**: a default that yields to a consistent project convention.
+- **Profile-specific**: applies only when the environment or assurance requirement is selected.
 
-Rule IDs are stable review labels for this skill. They are not ISO, CERT, or MISRA identifiers and do not establish external compliance.
+The rules below are **Required** unless marked otherwise. Examples and mechanisms live in the linked references; evaluate only rules relevant to the code or claims in scope.
 
-## Environment and authority
+## Environment
 
-### ENV-01 — Select the actual language and execution profile (Required)
+- **ENV-01 — Language profile.** Preserve the selected C edition, extensions, library surface, and execution environment; local compiler acceptance alone does not establish target support.
+- **ENV-02 — Project conventions.** Project instructions and maintained configuration override fallback style, within the language and required safety contracts.
+- **ENV-03 — Portability assumptions.** Isolate and substantiate material assumptions about widths, signedness, byte order, alignment, padding, bit-fields, floating point, and ABI.
+- **ENV-04 — Ownership boundaries.** For external or generated code, follow [Third-party and generated code](profile-overlays.md#third-party-and-generated-code).
 
-Use the project's declared C edition, compiler mode, extensions, target ABI, and hosted/freestanding environment. Do not introduce a newer feature, GNU extension, hosted API, or host assumption merely because the local compiler accepts it. Prefer an explicit language mode in maintained build configuration.
+## Interfaces
 
-### ENV-02 — Let project evidence override fallback style (Required)
+- **API-01 — Declarations.** Use compatible prototypes and definitions. Put public declarations in self-contained headers included by implementation and callers; use `(void)` for no arguments in C17 and earlier.
+- **API-02 — Contracts.** Establish applicable input ranges/units, lengths/capacities, termination, overlap, ownership/lifetime, failure outputs, errors, and synchronization. Express these through types where possible and document what the signature cannot convey.
+- **API-03 — Linkage.** Give private functions/objects `static` linkage. Export only intentional interfaces and use the project's public namespace.
+- **API-04 — Headers.** Make headers usable without incidental include order; avoid ordinary storage definitions and hidden effects. Use non-reserved include guards or project-supported `#pragma once`; see [header conventions](style-and-organization.md#include-guards).
 
-Follow applicable repository instructions, formatter configuration, public compatibility policy, and target constraints. Report a conflict when a local rule would cause undefined behavior, violate the chosen language mode, or weaken a required safety property.
+## Declarations and types
 
-### ENV-03 — Expose nonportable assumptions (Required)
-
-Document and test material implementation-defined, unspecified, or ABI-dependent behavior: integer widths, plain `char` signedness, byte order, alignment, padding, bit-field layout, floating-point model, calling convention, object representation, and compiler extensions. Isolate such assumptions behind a narrow boundary.
-
-### ENV-04 — Keep ownership boundaries intact (Required)
-
-Identify generated and vendored code before edits. Change the generator/template for generated behavior. Prefer a wrapper, configuration change, upstream update, or documented narrow patch for third-party code; do not mass-normalize it into a local style.
-
-## Interfaces, declarations, and linkage
-
-### API-01 — Make interfaces type-correct and visible (Required)
-
-Use prototypes with compatible declarations and definitions. Public declarations belong in self-contained headers included by both callers and implementations. In C17 and earlier, declare a no-argument function with `(void)`, not an unspecified parameter list. Do not duplicate `extern` declarations ad hoc in consumers.
-
-### API-02 — State the complete contract (Required)
-
-For each nontrivial interface, establish valid inputs, ranges, units, lengths/capacities, termination, alias/overlap policy, ownership transfer, lifetime, output state on failure, error semantics, reentrancy, and synchronization. Encode the contract in types and structure where practical; comment only the parts the signature cannot express.
-
-### API-03 — Minimize linkage and namespace exposure (Required)
-
-Give file-private functions and objects internal linkage with `static`. Export only deliberate interfaces. Prefix public identifiers when the project needs collision resistance; do not add prefixes to every local name without a project convention.
-
-### API-04 — Keep headers safe to include (Required)
-
-Headers must compile in a representative translation unit without relying on include order. Use a project-safe include guard or supported `#pragma once`; never create reserved identifiers such as names beginning with `__`, `_` followed by an uppercase letter, or any leading-underscore name at file scope. Avoid storage definitions and hidden side effects in ordinary public headers.
-
-## Declarations, types, and representations
-
-### DCL-01 — Initialize before use and keep scope narrow (Required)
-
-No execution path may read an indeterminate value. Initialize to a semantically valid state, not merely zero when zero is invalid. Declare an object in the narrowest scope that preserves clarity and lifetime requirements. Do not move large locals to `static` solely to save stack: that changes sharing, reentrancy, and thread safety.
-
-### DCL-02 — Use qualifiers for their real semantics (Required)
-
-Use `const` for data that an interface does not modify. Use `volatile` for implementation-defined hardware access or the narrow cases required by the language/platform contract; it is not atomicity, mutual exclusion, a general memory barrier, or a thread-safety mechanism. Do not cast away qualifiers to modify an object.
-
-### TYPE-01 — Choose types by domain (Required)
-
-Use `size_t` for object sizes and counts accepted by `sizeof`-based APIs, and `ptrdiff_t` for pointer differences. Use fixed-width integer types when an exact width is part of the domain, algorithm, wire/file format, register, or ABI, and validate availability and relevant layout. Do not create aliases that imply widths the implementation does not guarantee.
-
-### TYPE-02 — Validate before conversion (Required)
-
-Before narrowing, changing signedness, converting between integer and floating-point domains, or converting a pointer representation, prove the source value is representable and the operation is permitted. An explicit cast documents a decision; it does not make an invalid conversion safe.
-
-### TYPE-03 — Treat layout as a contract (Required)
-
-Do not serialize, hash, compare, or transmit raw structs unless representation, padding, byte order, alignment, and versioning are explicitly controlled. Prefer field-wise encoding/decoding. Do not reorder fields in ABI-, protocol-, persistent-, or hardware-controlled layouts merely to reduce padding.
+- **DCL-01 — Initialization.** Every read needs a valid initialized value. Keep scope narrow within the dialect; replacing automatic storage with `static` changes sharing and reentrancy.
+- **DCL-02 — Qualifiers.** Use `const` to express non-modification and preserve the underlying object's qualifiers. `volatile` serves target/language access contracts, not general synchronization.
+- **TYPE-01 — Domain types.** Use `size_t` for object sizes, `ptrdiff_t` for pointer differences, and supported exact-width types when width is part of the contract. Avoid aliases that promise unsupported widths.
+- **TYPE-02 — Conversions.** Establish representability and permission before narrowing, changing signedness, converting numeric domains, or converting pointer representations. Casts do not perform validation.
+- **TYPE-03 — Layout.** Preserve externally controlled layouts. Serialize fields explicitly unless padding, representation, alignment, byte order, and versioning are controlled; raw struct comparison/hashing needs the same care.
 
 ## Expressions and arithmetic
 
-### EXP-01 — Do not rely on undefined behavior (Required)
+For implementations and edge cases, read [integer operations](safety-and-portability.md#integer-operations) and the matching safety sections.
 
-Prevent out-of-bounds access, invalid or misaligned dereference, use after lifetime, uninitialized read, signed overflow, division by zero, invalid shifts, incompatible variadic arguments, strict-aliasing violations, modification of string literals, unsequenced conflicting side effects, and data races. Treat compiler optimization as allowed to exploit the language rules.
+- **EXP-01 — Defined behavior.** Prevent invalid access/lifetime, indeterminate reads, signed overflow, division by zero, invalid shifts, aliasing violations, mismatched variadic arguments, string-literal modification, unsequenced conflicting effects, and data races.
+- **EXP-02 — Evaluation.** Separate confusing side effects and avoid dependence on unspecified operand/argument order. Parentheses clarify grouping, not sequencing or macro evaluation count.
+- **INT-01 — Checked arithmetic.** Establish safe ranges before potentially overflowing arithmetic, including allocation sizing. Use unsigned wrap only for explicitly intended modular arithmetic.
+- **INT-02 — Signedness.** Control promotions and signed/unsigned comparisons; validate rather than silence conversion diagnostics with casts.
+- **BIT-01 — Shifts.** Use an appropriate promoted unsigned domain for masks/shifts. Bound the count by that domain's width; signed left shift requires a nonnegative operand and representable result.
+- **FLP-01 — Floating point.** When used, define relevant NaN/infinity, precision, rounding, and comparison expectations. Check range before integer conversion; choose exact or tolerant comparison according to the domain.
 
-### EXP-02 — Make evaluation and intent explicit (Required)
+## Buffers and resources
 
-Keep side effects separate from complex expressions. Do not depend on operand or argument evaluation order. Use parentheses when mixed operators obscure intent, while recognizing that parentheses do not change sequencing or prevent repeated macro evaluation.
+Read the corresponding [safety sections](safety-and-portability.md) for the operations in scope.
 
-### INT-01 — Check arithmetic before performing it (Required)
-
-Validate addition, subtraction, multiplication, negation, shifts, and allocation-size calculations before the potentially overflowing operation. Compare against a limit transformed into the operand's domain; do not detect signed overflow after it has occurred. Use unsigned wraparound only when modular arithmetic is the explicit, documented design.
-
-### INT-02 — Control signed/unsigned interactions (Required)
-
-Avoid implicit conversions that change the value domain or turn negative values into large unsigned values. Align operand types deliberately and verify ranges at the boundary. Do not silence conversion diagnostics with unchecked casts.
-
-### BIT-01 — Constrain bit operations (Required)
-
-Prefer unsigned operands for masks and shifts. Prove every shift count is within `[0, width - 1]` and the promoted left operand has the intended width. For signed left shift, the left operand must be nonnegative and the result representable; otherwise use an intentionally sized unsigned domain. Use named masks and document register/protocol bit numbering.
-
-### FLP-01 — Define floating-point expectations (Required when floating point is used)
-
-State accepted NaN, infinity, rounding, precision, and comparison behavior. Do not use exact equality when the domain requires tolerance, but do use exact comparison when values are deliberately discrete and exactly representable. Validate before converting floating point to integer.
-
-## Pointers, arrays, strings, and resources
-
-### PTR-01 — Prove pointer validity for each access (Required)
-
-Establish non-nullness when required, alignment, pointee type, object lifetime, available extent, and permitted aliasing before dereference. Pointer arithmetic and relational comparison must stay within the language-permitted object/array relationship.
-
-### ARR-01 — Carry bounds with buffers (Required)
-
-Buffer interfaces must carry a length or capacity with a documented unit. Validate indices and ranges before access, including zero-length cases and `offset + length` overflow. Never use `sizeof` on a decayed array parameter to infer the caller's element count.
-
-### STR-01 — Make termination and formatting explicit (Required)
-
-Establish a maximum accessible length before scanning untrusted text. Reserve space for the terminator when producing a C string and define whether truncation is an error. Do not treat `strncpy`/`strncat` as universally safe replacements or assume nonstandard `strlcpy`/`strlcat` are portable. Format strings must be trusted literals or otherwise controlled, with argument types matching the format.
-
-### MEM-01 — Give every allocation one clear owner (Required)
-
-Check `count * sizeof *ptr` before allocation, check the result, pair compatible allocators/deallocators, and define transfer semantics. Every path releases each owned resource exactly once. Assigning one pointer variable `NULL` after `free` may prevent reuse through that variable but does not repair dangling aliases.
-
-### RES-01 — Model partial initialization and cleanup (Required)
-
-Acquire resources in a known order and make cleanup safe after any partial failure. A forward-only `goto cleanup` chain is acceptable when it makes exactly-once release clearer; arbitrary jumps and cycles are not. Apply the same ownership discipline to files, handles, locks, mappings, and device resources.
+- **PTR-01 — Valid access.** Establish lifetime, extent, alignment, type, aliasing, and non-nullness where required. Keep pointer arithmetic/comparison within language-permitted relationships.
+- **ARR-01 — Bounds.** Carry lengths/capacities and their units. Validate indices, ranges, zero-length cases, and size arithmetic before access; a decayed array parameter has no recoverable element count via `sizeof`.
+- **STR-01 — Text.** Bound untrusted scans, reserve termination space, define truncation/overlap behavior, and use controlled format strings with matching argument types. Choose APIs by contract, not a supposedly safe suffix.
+- **MEM-01 — Ownership.** Check allocation sizing and results; make transfer/lifetime explicit and pair each owned allocation with its release. Setting one freed pointer to `NULL` does not repair aliases.
+- **RES-01 — Cleanup.** Release resources exactly once on every ownership-ending path, including partial initialization. Structured forward cleanup labels are acceptable when they clarify release order.
 
 ## Control flow, errors, and concurrency
 
-### CTL-01 — Keep control flow reviewable (Required)
-
-Use braces for controlled statements, including single statements, unless an established project profile explicitly requires otherwise and ambiguity cannot result. Prefer shallow, direct control flow and small cohesive functions. Complexity thresholds are project metrics, not universal line-count laws.
-
-### CTL-02 — Make every switch outcome deliberate (Required)
-
-Handle valid values and define the invalid-value strategy. Mark intentional fallthrough using the project's supported annotation or an unambiguous comment. Do not insert a silent `default` that hides a newly added enumerator when exhaustive handling is required.
-
-### ERR-01 — Follow each API's failure contract (Required)
-
-Check results that can fail or carry status, including allocation, I/O, parsing, conversion, synchronization, and bounded formatting. Interpret results exactly as documented: for example, a bounded formatting function may report the length that would have been produced rather than bytes stored. Do not invent generic success tests for APIs with different conventions.
-
-### ERR-02 — Leave outputs and state defined on failure (Required)
-
-Choose and document one of: no observable change, a valid partial result, or an explicitly invalidated result. Propagate useful error context without exposing secrets, losing the primary failure, or leaking resources.
-
-### CON-01 — Synchronize shared state with a real mechanism (Required when concurrency exists)
-
-Use the project's locks, C atomics, interrupt masking, or another documented synchronization primitive. Record ownership, lock order, atomic/non-atomic access discipline, and memory-order rationale. `volatile` alone does not prevent a data race. Signal handlers and ISRs may use only operations guaranteed safe by the selected platform contract and must respect latency constraints.
+- **CTL-01 — Control flow.** Make branch binding, loop bodies, and exits unambiguous. Braces for single statements are a [Recommended fallback style](style-and-organization.md#fallback-style-when-the-project-has-none), not a universal safety requirement; complexity thresholds are project policy.
+- **CTL-02 — Switches.** Handle the valid domain and invalid-value policy deliberately; mark intentional fallthrough. Preserve exhaustive-enum diagnostics rather than hiding missing handling behind a silent `default`.
+- **ERR-01 — Results.** Check fallible/status-bearing operations according to each API's actual contract; bounded formatting, I/O, parsing, and synchronization have different success conventions.
+- **ERR-02 — Failure state.** Define unchanged, valid-partial, or invalidated outputs on failure; retain useful context without leaks, secrets, or loss of the primary error.
+- **CON-01 — Shared state.** When concurrency exists, establish ownership, synchronization, lock ordering, and permitted access contexts. Read [concurrency, atomics, signals, and interrupts](safety-and-portability.md#concurrency-atomics-signals-and-interrupts) for asynchronous-operation constraints.
 
 ## Preprocessor, documentation, and verification
 
-### PRE-01 — Prefer language constructs to function-like macros (Recommended)
-
-Prefer functions, `static inline`, enums, and typed constants when they provide the needed behavior. Use a macro when preprocessing, type-generic syntax, constant-expression requirements, or conditional compilation genuinely requires it.
-
-### PRE-02 — Make necessary macros single-evaluation and statement-safe (Required)
-
-Parenthesize expression parameters and the complete result. A newly written value-like macro must not evaluate an argument more than once; prefer a type-specific inline function when single evaluation is impractical. When maintaining an unavoidable legacy/restricted macro that repeats an argument, document the limitation and forbid side-effecting arguments. Wrap a multi-statement macro as one syntactic statement without hiding `return`, `break`, `continue`, or `goto` from the caller.
-
-### PRE-03 — Keep conditional compilation coherent (Required)
-
-Each supported configuration must remain syntactically valid, type-correct, and tested. Keep paired directives in one file, explain non-obvious feature gates, and avoid redefining reserved library names or globally suppressing diagnostics.
-
-### DOC-01 — Document intent and contracts, not syntax (Recommended)
-
-Explain why, invariants, units, ownership, concurrency, hardware effects, error behavior, and surprising constraints. Keep comments adjacent and synchronized. Do not use comment percentage, boilerplate headers, or restated code as a quality proxy.
-
-### VER-01 — Use complementary evidence and report limits (Required)
-
-Compile in the selected language mode, run relevant tests, preserve meaningful diagnostics, and use static/dynamic analysis where supported. No single tool proves correctness. Report exact commands and observed results; identify unavailable target builds, hardware tests, analyzers, coverage, or licensed compliance evidence.
+- **PRE-01 — Abstractions (Recommended).** Prefer functions, `static inline`, enums, or typed constants when preprocessing is unnecessary.
+- **PRE-02 — Macros.** Parenthesize value-expression arguments/results and make newly written value-like macros single-evaluation. Document unavoidable legacy repetition and exclude side-effecting arguments. Wrap multi-statement macros as one statement without hidden control transfers; see [macro examples](safety-and-portability.md#macros-and-preprocessing).
+- **PRE-03 — Configurations.** Keep supported configurations syntactically valid and type-correct, paired directives in one file, and feature gates understandable. Preserve reserved names and diagnostics; select affected-configuration tests through the verification guidance.
+- **DOC-01 — Comments (Recommended).** Document intent and contracts using [Comments and documentation](style-and-organization.md#comments-and-documentation), rather than restating syntax.
+- **VER-01 — Evidence.** Use [Verification](verification.md) to select checks and bound claims; unavailable checks are gaps, not passes.
