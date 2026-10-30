@@ -1,0 +1,4 @@
+interface:
+  display_name: "write_richsun_log"
+  short_description: "按盛阳研发中心模板汇总当日工作，沿用个人历史措辞，撰写六项日志"
+  default_prompt: "使用 $write_richsun_log，根据今天的工作记录和相关会话，按我的历史风格撰写盛阳研发中心日志。"
