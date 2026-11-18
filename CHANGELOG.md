@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Rework `xu-review-loop` around the original build → functional test → independent review loop: the developer agent owns build, tests and fixes, the reviewer stays independent and read-only, any code change invalidates prior evidence, and the loop stops after the 10th unapproved submission by default; programmatic gating stays optional. Version identification stays VCS-neutral, with explicit Git and SVN handling. Add rebuild-after-rework and SVN working-copy behavioral scenarios.
 - Remove the `brain-memory` skill; long-term memory governance is no longer maintained here.
 - Flatten the repository so each skill package sits at the root, dropping the redundant `skills/` level.
 - Make `brain-memory` self-contained, centralize its retrieval and note contracts, and honor explicit interface choices without retrying ambiguous mutations.

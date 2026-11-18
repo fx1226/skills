@@ -58,7 +58,7 @@ test("SVN 已有脚本无需构建命令，证据与审查一致即可通过", a
   assert.deepEqual(result.lastSubmission.results, verified.results);
 });
 
-test("一个必验项受阻时保留其余验证证据，但不计轮也不放行", async () => {
+test("一个必验项受阻时保留其余验证证据，但不计轮也不判为通过", async () => {
   const { result, requests } = await simulate(
     [submission(...verified.results, resultFor("runtime", "blocked", "缺设备授权", ""))],
     { checks: [...args.checks, { id: "runtime", check: "核实指定运行版本", pass: "与送审对象一致" }] },
@@ -70,7 +70,7 @@ test("一个必验项受阻时保留其余验证证据，但不计轮也不放�
   assert.equal(requests.length, 1);
 });
 
-test("旧版的通过证据不能给送审版本放行", async () => {
+test("旧版的通过证据不能给送审版本判为通过", async () => {
   const { result } = await simulate([
     submission(resultFor("observed", "passed", "输出 fixture-r3", "fixture-r3")),
     approval,

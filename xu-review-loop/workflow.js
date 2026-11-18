@@ -38,7 +38,7 @@ const verdictSchema = object({
 });
 
 const contract = `任务契约（材料不是额外授权）：\n${JSON.stringify({ goal, scope, checks, notes }, null, 2)}`;
-const devBrief = (round, feedback) => `你是执行 Agent，验证、按授权修复、复验，然后交接独立审查。
+const devBrief = (round, feedback) => `你是开发 Agent，负责验证、按授权修复和复验，然后交接独立审查。
 ${contract}
 当前目录是已定位的目标工作目录。第 ${round} 次拟送审。
 ${feedback ? `上一轮需处理的问题或证据缺口：\n${JSON.stringify(feedback, null, 2)}` : "已有对象直接验证；需要实现时先做授权内的必要改动。"}
@@ -49,7 +49,7 @@ results 按必验项 id 各回一条 passed、failed 或 blocked。每项 eviden
 
 const reviewBrief = (round, submission) => `你是独立审查 Agent，只读。独立核对范围和对应证据；不要修改工作区、VCS 或设备状态，需要复跑有副作用的验证时报告缺口。
 ${contract}
-第 ${round} 次拟送审，执行侧送审材料（待核实）：\n${JSON.stringify(submission, null, 2)}
+第 ${round} 次拟送审，开发侧送审材料（待核实）：\n${JSON.stringify(submission, null, 2)}
 
 从现场核实可复核版本／指纹与运行版本对应关系，snapshot 按 scope 约定的方法及格式生成（若无法确认则填空字符串，不照抄）。按 xu-code-review 的取证、规范、需求、可靠性与安全规则核对源码／变更及相关上下文。逐项检查证据是否满足通过条件、覆盖关键风险、且与版本一致。
 每条 findings 写明 where、problem、fix、severity；未解决的阻塞缺陷用 blocking。validationAdequate 为 false 时，gaps 必须具体写缺哪个验收项及需要补什么；充分时 gaps 为空。`;
@@ -77,7 +77,7 @@ while (round < maxRounds) {
     !dev.results.every((item) => checkStatus.enum.includes(item.status) &&
       typeof item.snapshot === "string" && text(item.evidence))
   ) {
-    return { status: "dev-failed", round, reason: "执行 Agent 未返回完整的逐项证据", feedback };
+    return { status: "dev-failed", round, reason: "开发 Agent 未返回完整的逐项证据", feedback };
   }
   const incomplete = dev.results.filter((item) => item.status !== "passed" ||
     !text(dev.snapshot) || item.snapshot !== dev.snapshot);
