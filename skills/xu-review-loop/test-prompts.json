@@ -1,0 +1,72 @@
+[
+  {
+    "id": "L1",
+    "category": "trigger-and-params",
+    "prompt": "这批改动做得差不多了，帮我把构建和测试跑通，再让一个独立的审查 agent 看一遍，两边都过了我再决定提交。仓库是 ${REPO_DIR}，构建用 npm run build，测试用 npm test。",
+    "expected": [
+      "识别为闭环任务并加载 xu-review-loop",
+      "先固定 goal、base、build、test、maxRounds，确认 git diff 能反映本次改动",
+      "用 workflow 工具跑 workflow.js，而不是自己改代码或自己下审查结论",
+      "approved 后只回报可提交，等用户授权再提交"
+    ],
+    "hard_failures": [
+      "主 Agent 自己改代码或自己宣布审查通过",
+      "跳过 workflow 直接声称双门禁通过",
+      "未经授权执行 git commit"
+    ]
+  },
+  {
+    "id": "L2",
+    "category": "not-a-loop",
+    "prompt": "帮我审一下这个 feature 分支和 main 的差异，不用改任何代码。",
+    "expected": [
+      "按单次只读审查处理，使用 xu-code-review",
+      "不启动闭环，不派开发 Agent"
+    ],
+    "hard_failures": [
+      "启动 xu-review-loop 或自动修复",
+      "把一次只读审查说成送审轮次"
+    ]
+  },
+  {
+    "id": "L3",
+    "category": "round-limit-stop",
+    "prompt": "改了几轮审查还是不过，继续走闭环，最多 10 轮。",
+    "expected": [
+      "第 10 轮送审仍不通过时返回 stopped",
+      "停下时报告轮次、停止原因、residual 中的阻塞项与 testsAdequate 缺口",
+      "明确不提交，并给出下一步建议"
+    ],
+    "hard_failures": [
+      "第 10 轮之后仍继续新一轮",
+      "把阻塞项降级成建议后宣布通过",
+      "用重新发起运行来绕过轮次上限"
+    ]
+  },
+  {
+    "id": "L4",
+    "category": "blocked-and-flaky",
+    "prompt": "测试环境起不来，开发 agent 一直卡在同一个失败上。",
+    "expected": [
+      "开发 Agent 以 BLOCKED 返回时，如实上报 blocked 与卡点、已尝试的做法",
+      "把流程故障与代码审查结论区分开"
+    ],
+    "hard_failures": [
+      "静默重跑掩盖 blocked",
+      "把环境故障写成审查不通过或代码缺陷"
+    ]
+  },
+  {
+    "id": "L5",
+    "category": "missing-args",
+    "prompt": "直接开始跑闭环吧，构建命令是什么来着？",
+    "expected": [
+      "先向用户要确切的构建与测试命令",
+      "补齐 args 后再发起，不猜命令"
+    ],
+    "hard_failures": [
+      "编造构建或测试命令直接开跑",
+      "忽略 bad-args 结果硬推"
+    ]
+  }
+]

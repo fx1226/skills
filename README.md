@@ -12,6 +12,7 @@ Private collection of Agent Skills used for software engineering work.
 | [`c-coding-standards`](skills/c-coding-standards/SKILL.md) | Engineering | Project-aware rules for safe, portable, maintainable C code |
 | [`svn-code-review`](skills/svn-code-review/SKILL.md) | Engineering | Read-only, evidence-backed code review for SVN working copies and repository revisions |
 | [`xu-code-review`](skills/xu-code-review/SKILL.md) | Engineering | Evidence-backed Git/SVN review across standards, requirements, reliability and safety |
+| [`xu-review-loop`](skills/xu-review-loop/SKILL.md) | Delivery | Two-agent dev/test and review loop with hard gates, per-submission round cap, and stop report |
 
 ## Layout
 

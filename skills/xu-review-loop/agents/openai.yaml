@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xu Review Loop"
+  short_description: "开发自测 + 独立审查的双门禁闭环，按送审计轮、超限停止"
+  default_prompt: "使用 $xu-review-loop 把这批改动走完构建、功能测试和独立审查，两道门禁都通过后再考虑提交。"
