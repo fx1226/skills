@@ -2,6 +2,7 @@
 
 ## Unreleased
 
+- Flatten the repository so each skill package sits at the root, dropping the redundant `skills/` level.
 - Make `brain-memory` self-contained, centralize its retrieval and note contracts, and honor explicit interface choices without retrying ambiguous mutations.
 - Cover forward, reverse, and equal-endpoint SVN ranges; distinguish read-only review from explicitly authorized follow-up execution.
 - Complete C profile-reference routing, make high-risk completion evidence explicit, and shorten skill descriptions.
