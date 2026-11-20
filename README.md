@@ -12,14 +12,16 @@ Private collection of Agent Skills used for software engineering work.
 | [`svn-code-review`](svn-code-review/SKILL.md) | Engineering | Read-only, evidence-backed code review for SVN working copies and repository revisions |
 | [`xu-code-review`](xu-code-review/SKILL.md) | Engineering | Evidence-backed Git/SVN review across standards, requirements, reliability and safety |
 | [`xu-review-loop`](xu-review-loop/SKILL.md) | Delivery | Build → functional test → independent review loop with developer self-testing, read-only review, same-reviewer incremental re-review and bounded rework |
+| [`write_richsun_log`](write_richsun_log/SKILL.md) | Documentation | Draft or revise the Shengyang daily work log in the team format and personal phrasing |
+| [`note-take`](note-take/SKILL.md) | Workflow | Turn durable preferences and project conventions into confirmed global or project rule-file edits |
 
 ## Layout
 
 ```text
 <skill-name>/
   SKILL.md
-  agents/
-  references/
+  agents/            (optional)
+  references/        (optional)
   test-prompts.json
 ```
 
