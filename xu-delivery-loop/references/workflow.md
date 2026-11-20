@@ -7,7 +7,7 @@
 ```js
 workflow({
   meta: {
-    name: "xu-review-loop",
+    name: "xu-delivery-loop",
     description: goal,
     phases: [{ title: "验证与修复" }, { title: "独立审查" }]
   },
@@ -34,4 +34,4 @@ workflow({
 
 `round` 永远是已完成的有效送审次数。本次在执行或审查环节出错时，未完成的拟送审轮次是 `round + 1`。不要自动重开脚本清零已用轮次。
 
-维护时从仓库根目录运行 `node --test xu-review-loop/workflow.test.cjs`。这只验证脚本判定，不替代兼容运行器实跑；会话路径按 [行为用例](../test-prompts.json) 验证。
+维护时从仓库根目录运行 `node --test xu-delivery-loop/workflow.test.cjs`。这只验证脚本判定，不替代兼容运行器实跑；会话路径按 [行为用例](../test-prompts.json) 验证。

@@ -1,9 +1,9 @@
 ---
-name: xu-review-loop
-description: "改码闭环：开发角色自测构建与功能测试，独立审查 Agent 只读复核；退回时按影响面修复、复验，并由同一审查 Agent 增量复审，直到通过或到达送审上限。Git、SVN、文件或补丁均适用；单次只读审查用 xu-code-review。"
+name: xu-delivery-loop
+description: "交付闭环：开发角色自测构建与功能测试，独立审查 Agent 只读复核；退回时按影响面修复、复验，并由同一审查 Agent 增量复审，直到通过或到达送审上限。Git、SVN、文件或补丁均适用；单次只读审查用 xu-code-review。"
 ---
 
-# xu-review-loop
+# xu-delivery-loop
 
 **开发角色构建、自测；独立审查 Agent 只读复核；两边都通过才可提交。** 开发角色可由主 Agent 直接承担；审查必须换上下文独立进行，不能自审；开发子 Agent 只在并行或隔离需要时派。
 
