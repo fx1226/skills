@@ -1,5 +1,5 @@
 // workflow 工具的函数体，调用契约见 references/workflow.md。
-const { goal, scope, checks, maxRounds = 10, notes = "仅执行用户已授权的操作" } = args || {};
+const { goal, scope, checks, maxRounds = 3, notes = "仅执行用户已授权的操作" } = args || {};
 const text = (value) => typeof value === "string" && value.trim().length > 0;
 if (
   !text(goal) || !text(scope) || !text(notes) ||
@@ -11,7 +11,7 @@ if (
   return {
     status: "bad-args",
     round: 0,
-    reason: "需提供 goal、scope、非空 checks（唯一 id、check、pass）；maxRounds 须为 1–20 的整数",
+    reason: "需提供 goal、scope、非空 checks（唯一 id、check、pass）；maxRounds 须为 1–20 的整数（默认 3）",
   };
 }
 
@@ -43,14 +43,22 @@ ${contract}
 当前目录是已定位的目标工作目录。第 ${round} 次拟送审。
 ${feedback ? `上一轮需处理的问题或证据缺口：\n${JSON.stringify(feedback, null, 2)}` : "已有对象直接验证；需要实现时先做授权内的必要改动。"}
 
-先完成可独立执行的必验项。缺权限或环境只报受阻；按授权修复范围内问题，修过则复验受影响项；同一失败连续修复 3 次仍不过就报告卡点。只缺证据时先补证据，不为返工而改代码。无提交、部署或中断外部环境的隐含授权。
+先完成可独立执行的必验项。缺权限或环境只报受阻；按授权修复范围内问题，修过则复验受影响项；同一失败反复修复仍不过就报告卡点。只缺证据时先补证据，不为返工而改代码。无提交、部署或中断外部环境的隐含授权。
 summary 写改动范围（可无改动）、处理及取舍。snapshot 按 scope 约定的方法及格式生成标识；验运行时还需确认产物／运行版本确与对象对应，未能确定时据实填写（未知可填空字符串）。
 results 按必验项 id 各回一条 passed、failed 或 blocked。每项 evidence 写实际方法、环境、观察结果或卡点与尝试；passed 的 snapshot 必须是证据实际对应的送审对象，不能把旧版本的结果挪用到新版本。`;
 
-const reviewBrief = (round, submission) => `你是独立审查 Agent，只读。独立核对范围和对应证据；不要修改工作区、VCS 或设备状态，需要复跑有副作用的验证时报告缺口。
+const priorLedger = (review, round) => !review || round <= 1 ? "" : `\n上一轮（第 ${round - 1} 次送审）审查结论，供闭环核对（待核实，不得直接当作本轮通过依据）：\n${JSON.stringify({
+  snapshot: review.snapshot,
+  summary: review.summary,
+  blocking: review.findings.filter((item) => item.severity === "blocking"),
+  gaps: review.gaps,
+}, null, 2)}
+逐条确认上述阻塞项和证据缺口是否闭环；范围外的历史问题只作观察，不计入阻塞。`;
+
+const reviewBrief = (round, submission, previousReview) => `你是独立审查 Agent，只读。独立核对范围和对应证据；不要修改工作区、VCS 或设备状态，需要复跑有副作用的验证时报告缺口。
 ${contract}
 第 ${round} 次拟送审，开发侧送审材料（待核实）：\n${JSON.stringify(submission, null, 2)}
-
+${priorLedger(previousReview, round)}
 从现场核实可复核版本／指纹与运行版本对应关系，snapshot 按 scope 约定的方法及格式生成（若无法确认则填空字符串，不照抄）。按 xu-code-review 的取证、规范、需求、可靠性与安全规则核对源码／变更及相关上下文。逐项检查证据是否满足通过条件、覆盖关键风险、且与版本一致。
 每条 findings 写明 where、problem、fix、severity；未解决的阻塞缺陷用 blocking。validationAdequate 为 false 时，gaps 必须具体写缺哪个验收项及需要补什么；充分时 gaps 为空。`;
 
@@ -64,6 +72,7 @@ async function ask(prompt, options) {
 
 let round = 0;
 let feedback;
+let previousReview;
 while (round < maxRounds) {
   const next = round + 1;
   phase("验证与修复");
@@ -89,7 +98,7 @@ while (round < maxRounds) {
   }
 
   phase("独立审查");
-  const review = await ask(reviewBrief(next, dev), {
+  const review = await ask(reviewBrief(next, dev, previousReview), {
     schema: verdictSchema, label: `review-r${next}`, phase: "独立审查",
   });
   if (
@@ -123,4 +132,5 @@ while (round < maxRounds) {
     };
   }
   feedback = { blocking, gaps: review.gaps, lastSubmission: dev };
+  previousReview = review;
 }

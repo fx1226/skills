@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="generator" content="archify 3.2.0">
   <meta name="archify-reader-contract" content="declared-wide-v1">
-  <title>改码闭环：开发 Agent 自测，审查 Agent 复核</title>
+  <title>改码闭环：开发自测，独立审查增量复审</title>
   <script>
     // Resolve the theme before first paint so light-preference users don't
     // see a dark flash. The toolbar script below re-applies with UI state.
@@ -5194,7 +5194,7 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
            data-preset-badge-blueprint="蓝图 / 修订 01"
            data-preset-badge-editorial="编辑风格 / 现场笔记">
         <div class="pulse-dot"></div>
-        <h1>改码闭环：开发 Agent 自测，审查 Agent 复核</h1>
+        <h1>改码闭环：开发自测，独立审查增量复审</h1>
       </div>
     </div>
 
@@ -5203,8 +5203,8 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
     <!-- Main Diagram -->
     <div class="diagram-container" data-detail-level="read"
          data-preset-badge-editorial-plate="ARCHIFY / 图版 04">
-      <svg viewBox="0 0 805 534" data-reader-fit="width-first" data-layout-contract="readable-v2" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="">
-        <title id="archify-diagram-title">改码闭环：开发 Agent 自测，审查 Agent 复核</title>
+      <svg viewBox="0 0 899 534" data-layout-contract="readable-v2" role="img" lang="zh-CN" aria-labelledby="archify-diagram-title archify-diagram-description" data-animation="trace" data-preset="classic" data-quality-profile="showcase" data-node-ui="">
+        <title id="archify-diagram-title">改码闭环：开发自测，独立审查增量复审</title>
         <desc id="archify-diagram-description">由 Archify 生成的工作流图。</desc>
         <!-- Definitions -->
         <defs>
@@ -5250,14 +5250,14 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
         <rect width="100%" height="100%" fill="url(#grid)" />
 
         <!-- Swimlanes -->
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="749" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="74" class="t-muted" font-size="10" font-weight="600">01 / 开发 Agent</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-0" x="40" y="52" width="843" height="106" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="74" class="t-muted" font-size="10" font-weight="600">01 / 开发角色（可由主 Agent 承担）</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="178" width="749" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <text x="54" y="200" class="t-muted" font-size="10" font-weight="600">02 / 审查 Agent</text>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-1" x="40" y="178" width="843" height="106" rx="10" class="c-lane" stroke-width="1"/>
+        <text x="54" y="200" class="t-muted" font-size="10" font-weight="600">02 / 独立审查 Agent</text>
 
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-2" x="40" y="304" width="749" height="106" rx="10" class="c-lane" stroke-width="1"/>
-        <rect data-graph-role="structural-frame" data-composition-frame-kind="exception-lane" data-composition-frame-id="lane-2-exception" x="46" y="310" width="737" height="94" rx="8" class="c-security-group" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="lane" data-composition-frame-id="lane-2" x="40" y="304" width="843" height="106" rx="10" class="c-lane" stroke-width="1"/>
+        <rect data-graph-role="structural-frame" data-composition-frame-kind="exception-lane" data-composition-frame-id="lane-2-exception" x="46" y="310" width="831" height="94" rx="8" class="c-security-group" stroke-width="1"/>
         <text x="54" y="326" class="t-security" font-size="10" font-weight="600">EX / 例外路径</text>
 
         <!-- Phase headers -->
@@ -5267,19 +5267,19 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
 
 
         <!-- Edge paths -->
-        <path data-edge-from="build" data-edge-to="test" data-edge-label="构建产物" data-edge-key="0" data-edge-id="build_to_test" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="264,120;320.4,120" d="M 264 120 L 320.4 120" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="fix" data-edge-to="build" data-edge-label="改完重跑构建" data-edge-key="1" data-edge-id="fix_to_build" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="440.4,365;218,365;218,146" d="M 440.4 365 L 226 365 Q 218 365 218 357 L 218 146" class="a-dashed" data-animate="edge" style="--step:7" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
-        <path data-edge-from="handoff" data-edge-to="review" data-edge-label="第 N 轮送审" data-edge-key="2" data-edge-id="handoff_to_review" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="606.4,146;606.4,220" d="M 606.4 146 L 606.4 220" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="build" data-edge-to="test" data-edge-label="构建产物" data-edge-key="0" data-edge-id="build_to_test" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="320,120;376.4,120" d="M 320 120 L 376.4 120" class="a-default" data-animate="edge" style="--step:1" stroke-width="1.4" marker-end="url(#arrowhead)"/>
+        <path data-edge-from="fix" data-edge-to="build" data-edge-label="按影响面重建 / 复测" data-edge-key="1" data-edge-id="fix_to_build" data-composition-routing="workflow-v2-auto" data-edge-role="return" data-composition-points="504.4,365;246,365;246,146" d="M 504.4 365 L 254 365 Q 246 365 246 357 L 246 146" class="a-dashed" data-animate="edge" style="--step:7" stroke-width="1.4" marker-end="url(#arrowhead-dashed)"/>
+        <path data-edge-from="handoff" data-edge-to="review" data-edge-label="第 N 轮送审" data-edge-key="2" data-edge-id="handoff_to_review" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="680.4,146;680.4,220" d="M 680.4 146 L 680.4 220" class="a-default" data-animate="edge" style="--step:3" stroke-width="1.4" marker-end="url(#arrowhead)"/>
         <path data-edge-from="ready" data-edge-to="build" data-edge-key="3" data-edge-id="ready_to_build" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="140,120;172,120" d="M 140 120 L 172 120" class="a-default" data-animate="edge" style="--step:0" stroke-width="1.4" marker-end="url(#arrowhead)"/>
-        <path data-edge-from="review" data-edge-to="commit" data-edge-label="审查通过" data-edge-key="4" data-edge-id="review_to_commit" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="652.4,246;730.4,246;730.4,154" d="M 652.4 246 L 722.4 246 Q 730.4 246 730.4 238 L 730.4 154" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
-        <path data-edge-from="review" data-edge-to="fix" data-edge-label="审查退回" data-edge-key="5" data-edge-id="review_to_fix" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="599.4,272;599.4,372;532.4,372" d="M 599.4 272 L 599.4 364 Q 599.4 372 591.4 372 L 532.4 372" class="a-security" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="review" data-edge-to="stop" data-edge-key="6" data-edge-id="review_to_stop" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="630.4,272;630.4,372;684.4,372" d="M 630.4 272 L 630.4 364 Q 630.4 372 638.4 372 L 684.4 372" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="test" data-edge-to="fix" data-edge-label="测试不通过" data-edge-key="7" data-edge-id="test_to_fix" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="366.4,146;366.4,231;486.4,231;486.4,338" d="M 366.4 146 L 366.4 223 Q 366.4 231 374.4 231 L 478.4 231 Q 486.4 231 486.4 239 L 486.4 338" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
-        <path data-edge-from="test" data-edge-to="handoff" data-edge-label="测试通过" data-edge-key="8" data-edge-id="test_to_handoff" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="412.4,120;560.4,120" d="M 412.4 120 L 560.4 120" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="review" data-edge-to="commit" data-edge-label="审查通过" data-edge-key="4" data-edge-id="review_to_commit" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="760.4,246;804.4,246;804.4,154" d="M 760.4 246 L 796.4 246 Q 804.4 246 804.4 238 L 804.4 154" class="a-emphasis" data-animate="edge" style="--step:4" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
+        <path data-edge-from="review" data-edge-to="fix" data-edge-label="审查退回" data-edge-key="5" data-edge-id="review_to_fix" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="673.4,272;673.4,372;616.4,372" d="M 673.4 272 L 673.4 364 Q 673.4 372 665.4 372 L 616.4 372" class="a-security" data-animate="edge" style="--step:11" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="review" data-edge-to="stop" data-edge-key="6" data-edge-id="review_to_stop" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="704.4,272;704.4,372;734.4,372" d="M 704.4 272 L 704.4 364 Q 704.4 372 712.4 372 L 734.4 372" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="test" data-edge-to="fix" data-edge-label="测试不通过" data-edge-key="7" data-edge-id="test_to_fix" data-composition-routing="workflow-v2-auto" data-edge-role="error" data-composition-points="440.4,146;440.4,231;560.4,231;560.4,338" d="M 440.4 146 L 440.4 223 Q 440.4 231 448.4 231 L 552.4 231 Q 560.4 231 560.4 239 L 560.4 338" class="a-security" data-animate="edge" style="--step:12" stroke-width="1.4" marker-end="url(#arrowhead-security)"/>
+        <path data-edge-from="test" data-edge-to="handoff" data-edge-label="测试通过" data-edge-key="8" data-edge-id="test_to_handoff" data-composition-routing="workflow-v2-auto" data-edge-role="main" data-composition-points="504.4,120;634.4,120" d="M 504.4 120 L 634.4 120" class="a-emphasis" data-animate="edge" style="--step:2" stroke-width="1.8" marker-end="url(#arrowhead-emphasis)"/>
 
         <!-- Nodes -->
-        <g id="node-ready" data-node-id="ready" data-node-label="改动就绪" tabindex="0" role="button" aria-label="聚焦改动就绪，代码写完或改完, 开发 Agent" aria-pressed="false" data-node-kind="backend" data-node-sublabel="代码写完或改完" data-node-context="开发 Agent">
-          <title>改动就绪 · 代码写完或改完 · 开发 Agent</title>
+        <g id="node-ready" data-node-id="ready" data-node-label="改动就绪" tabindex="0" role="button" aria-label="聚焦改动就绪，代码写完或改完, 开发角色（可由主 Agent 承担）" aria-pressed="false" data-node-kind="backend" data-node-sublabel="代码写完或改完" data-node-context="开发角色（可由主 Agent 承担）">
+          <title>改动就绪 · 代码写完或改完 · 开发角色（可由主 Agent 承担）</title>
           <rect x="48" y="94" width="92" height="52" rx="8" class="c-mask"/>
           <rect x="48" y="94" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step:0" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="start" class="semantic-sigil s-backend" transform="translate(54 100) scale(0.6875)">
@@ -5290,117 +5290,117 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <text data-detail="context" x="94" y="132" class="t-muted" font-size="8" text-anchor="middle">代码写完或改完</text>
         </g>
 
-        <g id="node-build" data-node-id="build" data-node-label="构建" tabindex="0" role="button" aria-label="聚焦构建，始终基于最新代码, 开发 Agent" aria-pressed="false" data-node-kind="backend" data-node-sublabel="始终基于最新代码" data-node-context="开发 Agent">
-          <title>构建 · 始终基于最新代码 · 开发 Agent</title>
-          <rect x="172" y="94" width="92" height="52" rx="8" class="c-mask"/>
-          <rect x="172" y="94" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
+        <g id="node-build" data-node-id="build" data-node-label="构建" tabindex="0" role="button" aria-label="聚焦构建，基于最新代码 · 输入未变可复用, 开发角色（可由主 Agent 承担）" aria-pressed="false" data-node-kind="backend" data-node-sublabel="基于最新代码 · 输入未变可复用" data-node-context="开发角色（可由主 Agent 承担）">
+          <title>构建 · 基于最新代码 · 输入未变可复用 · 开发角色（可由主 Agent 承担）</title>
+          <rect x="172" y="94" width="148" height="52" rx="8" class="c-mask"/>
+          <rect x="172" y="94" width="148" height="52" rx="8" class="c-backend" data-animate="node" style="--step:1" stroke-width="1.5"/>
           <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(178 100) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="218" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">构建</text>
-          <text data-detail="context" x="218" y="132" class="t-muted" font-size="8" text-anchor="middle">始终基于最新代码</text>
+          <text data-node-label="" data-detail-anchor="" x="246" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">构建</text>
+          <text data-detail="context" x="246" y="132" class="t-muted" font-size="8" text-anchor="middle">基于最新代码 · 输入未变可复用</text>
         </g>
 
-        <g id="node-test" data-node-id="test" data-node-label="功能测试" tabindex="0" role="button" aria-label="聚焦功能测试，本次构建产物 · 相关回归, 开发 Agent" aria-pressed="false" data-node-kind="backend" data-node-sublabel="本次构建产物 · 相关回归" data-node-context="开发 Agent">
-          <title>功能测试 · 本次构建产物 · 相关回归 · 开发 Agent</title>
-          <rect x="320.4" y="94" width="92" height="52" rx="8" class="c-mask"/>
-          <rect x="320.4" y="94" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(326.4 100) scale(0.6875)">
+        <g id="node-test" data-node-id="test" data-node-label="功能测试" tabindex="0" role="button" aria-label="聚焦功能测试，对应产物 · 按影响面选回归, 开发角色（可由主 Agent 承担）" aria-pressed="false" data-node-kind="backend" data-node-sublabel="对应产物 · 按影响面选回归" data-node-context="开发角色（可由主 Agent 承担）">
+          <title>功能测试 · 对应产物 · 按影响面选回归 · 开发角色（可由主 Agent 承担）</title>
+          <rect x="376.4" y="94" width="128" height="52" rx="8" class="c-mask"/>
+          <rect x="376.4" y="94" width="128" height="52" rx="8" class="c-backend" data-animate="node" style="--step:2" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="backend" class="semantic-sigil s-backend" transform="translate(382.4 100) scale(0.6875)">
             <path d="M6 3 3 8l3 5M10 3l3 5-3 5"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="366.4" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">功能测试</text>
-          <text data-detail="context" x="366.4" y="132" class="t-muted" font-size="6" text-anchor="middle">本次构建产物 · 相关回归</text>
+          <text data-node-label="" data-detail-anchor="" x="440.4" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">功能测试</text>
+          <text data-detail="context" x="440.4" y="132" class="t-muted" font-size="8" text-anchor="middle">对应产物 · 按影响面选回归</text>
         </g>
 
-        <g id="node-handoff" data-node-id="handoff" data-node-label="送审说明" tabindex="0" role="button" aria-label="聚焦送审说明，新增/Bug · 逻辑 · 测试, 开发 Agent" aria-pressed="false" data-node-kind="backend" data-node-sublabel="新增/Bug · 逻辑 · 测试" data-node-context="开发 Agent">
-          <title>送审说明 · 新增/Bug · 逻辑 · 测试 · 开发 Agent</title>
-          <rect x="560.4" y="94" width="92" height="52" rx="8" class="c-mask"/>
-          <rect x="560.4" y="94" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="briefcase" class="semantic-sigil s-backend" transform="translate(566.4 100) scale(0.6875)">
+        <g id="node-handoff" data-node-id="handoff" data-node-label="送审材料" tabindex="0" role="button" aria-label="聚焦送审材料，四要素 · 逐项证据, 开发角色（可由主 Agent 承担）" aria-pressed="false" data-node-kind="backend" data-node-sublabel="四要素 · 逐项证据" data-node-context="开发角色（可由主 Agent 承担）">
+          <title>送审材料 · 四要素 · 逐项证据 · 开发角色（可由主 Agent 承担）</title>
+          <rect x="634.4" y="94" width="92" height="52" rx="8" class="c-mask"/>
+          <rect x="634.4" y="94" width="92" height="52" rx="8" class="c-backend" data-animate="node" style="--step:3" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="briefcase" class="semantic-sigil s-backend" transform="translate(640.4 100) scale(0.6875)">
             <rect x="2" y="5" width="12" height="9" rx="2"/><path d="M5 5V2h6v3M2 9h12M7 9v2h2V9"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="606.4" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">送审说明</text>
-          <text data-detail="context" x="606.4" y="132" class="t-muted" font-size="6.3" text-anchor="middle">新增/Bug · 逻辑 · 测试</text>
+          <text data-node-label="" data-detail-anchor="" x="680.4" y="115" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">送审材料</text>
+          <text data-detail="context" x="680.4" y="132" class="t-muted" font-size="8" text-anchor="middle">四要素 · 逐项证据</text>
         </g>
 
-        <g id="node-commit" data-node-id="commit" data-node-label="提交代码" tabindex="0" role="button" aria-label="聚焦提交代码，测试与审查都通过, 开发 Agent" aria-pressed="false" data-node-kind="database" data-node-sublabel="测试与审查都通过" data-node-tag="需单独授权" data-node-context="开发 Agent">
-          <title>提交代码 · 测试与审查都通过 · 开发 Agent · 需单独授权</title>
-          <rect x="684.4" y="86" width="92" height="68" rx="8" class="c-mask"/>
-          <rect x="684.4" y="86" width="92" height="68" rx="8" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="success" class="semantic-sigil s-database" transform="translate(690.4 92) scale(0.6875)">
+        <g id="node-commit" data-node-id="commit" data-node-label="提交代码" tabindex="0" role="button" aria-label="聚焦提交代码，测试与审查都通过, 开发角色（可由主 Agent 承担）" aria-pressed="false" data-node-kind="database" data-node-sublabel="测试与审查都通过" data-node-tag="需单独授权" data-node-context="开发角色（可由主 Agent 承担）">
+          <title>提交代码 · 测试与审查都通过 · 开发角色（可由主 Agent 承担） · 需单独授权</title>
+          <rect x="758.4" y="86" width="92" height="68" rx="8" class="c-mask"/>
+          <rect x="758.4" y="86" width="92" height="68" rx="8" class="c-database" data-animate="node" style="--step:5" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="success" class="semantic-sigil s-database" transform="translate(764.4 92) scale(0.6875)">
             <circle cx="8" cy="8" r="5.3"/>
             <path d="m5.2 8 1.8 1.8 3.8-4"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="730.4" y="107" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">提交代码</text>
-          <text data-detail="context" x="730.4" y="124" class="t-muted" font-size="8" text-anchor="middle">测试与审查都通过</text>
-        <text data-detail="fine" x="730.4" y="142" class="t-database" font-size="7" text-anchor="middle">需单独授权</text>
+          <text data-node-label="" data-detail-anchor="" x="804.4" y="107" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">提交代码</text>
+          <text data-detail="context" x="804.4" y="124" class="t-muted" font-size="8" text-anchor="middle">测试与审查都通过</text>
+        <text data-detail="fine" x="804.4" y="142" class="t-database" font-size="7" text-anchor="middle">需单独授权</text>
         </g>
 
-        <g id="node-review" data-node-id="review" data-node-label="代码审查" tabindex="0" role="button" aria-label="聚焦代码审查，独立 · 只读 · 不改代码, 审查 Agent" aria-pressed="false" data-node-kind="external" data-node-sublabel="独立 · 只读 · 不改代码" data-node-context="审查 Agent">
-          <title>代码审查 · 独立 · 只读 · 不改代码 · 审查 Agent</title>
-          <rect x="560.4" y="220" width="92" height="52" rx="8" class="c-mask"/>
-          <rect x="560.4" y="220" width="92" height="52" rx="8" class="c-external" data-animate="node" style="--step:4" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="person" class="semantic-sigil s-external" transform="translate(566.4 226) scale(0.6875)">
+        <g id="node-review" data-node-id="review" data-node-label="代码审查" tabindex="0" role="button" aria-label="聚焦代码审查，首轮全量 · 返工轮同一审查者增量, 独立审查 Agent" aria-pressed="false" data-node-kind="external" data-node-sublabel="首轮全量 · 返工轮同一审查者增量" data-node-context="独立审查 Agent">
+          <title>代码审查 · 首轮全量 · 返工轮同一审查者增量 · 独立审查 Agent</title>
+          <rect x="600.4" y="220" width="160" height="52" rx="8" class="c-mask"/>
+          <rect x="600.4" y="220" width="160" height="52" rx="8" class="c-external" data-animate="node" style="--step:4" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="person" class="semantic-sigil s-external" transform="translate(606.4 226) scale(0.6875)">
             <circle cx="8" cy="4.5" r="2.5"/><path d="M3 14v-2a5 5 0 0 1 10 0v2"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="606.4" y="241" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">代码审查</text>
-          <text data-detail="context" x="606.4" y="258" class="t-muted" font-size="6.3" text-anchor="middle">独立 · 只读 · 不改代码</text>
+          <text data-node-label="" data-detail-anchor="" x="680.4" y="241" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">代码审查</text>
+          <text data-detail="context" x="680.4" y="258" class="t-muted" font-size="8" text-anchor="middle">首轮全量 · 返工轮同一审查者增量</text>
         </g>
 
-        <g id="node-fix" data-node-id="fix" data-node-label="修改代码" tabindex="0" role="button" aria-label="聚焦修改代码，修复问题或补测试, 例外路径" aria-pressed="false" data-node-kind="backend" data-node-sublabel="修复问题或补测试" data-node-tag="改码作废旧结论" data-node-context="例外路径">
-          <title>修改代码 · 修复问题或补测试 · 例外路径 · 改码作废旧结论</title>
-          <rect x="440.4" y="338" width="92" height="68" rx="8" class="c-mask"/>
-          <rect x="440.4" y="338" width="92" height="68" rx="8" class="c-backend" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="active" class="semantic-sigil s-backend" transform="translate(446.4 344) scale(0.6875)">
+        <g id="node-fix" data-node-id="fix" data-node-label="修改代码 / 补证据" tabindex="0" role="button" aria-label="聚焦修改代码 / 补证据，修复问题或补测试, 例外路径" aria-pressed="false" data-node-kind="backend" data-node-sublabel="修复问题或补测试" data-node-tag="旧结论按影响面失效" data-node-context="例外路径">
+          <title>修改代码 / 补证据 · 修复问题或补测试 · 例外路径 · 旧结论按影响面失效</title>
+          <rect x="504.4" y="338" width="112" height="68" rx="8" class="c-mask"/>
+          <rect x="504.4" y="338" width="112" height="68" rx="8" class="c-backend" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="active" class="semantic-sigil s-backend" transform="translate(510.4 344) scale(0.6875)">
             <path d="M2 8h3l1.5-3.5L9 12l1.6-4H14"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="486.4" y="359" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">修改代码</text>
-          <text data-detail="context" x="486.4" y="376" class="t-muted" font-size="8" text-anchor="middle">修复问题或补测试</text>
-        <text data-detail="fine" x="486.4" y="394" class="t-backend" font-size="7" text-anchor="middle">改码作废旧结论</text>
+          <text data-node-label="" data-detail-anchor="" x="560.4" y="369.2" class="t-primary" font-size="10.1" font-weight="600" text-anchor="middle">修改代码 / 补证据</text>
+          <text data-detail="context" x="560.4" y="383.9" class="t-muted" font-size="8" text-anchor="middle">修复问题或补测试</text>
+        <text data-detail="fine" x="560.4" y="396.7" class="t-backend" font-size="7" text-anchor="middle">旧结论按影响面失效</text>
         </g>
 
-        <g id="node-stop" data-node-id="stop" data-node-label="停止" tabindex="0" role="button" aria-label="聚焦停止，第 10 次送审仍不通过, 例外路径" aria-pressed="false" data-node-kind="security" data-node-sublabel="第 10 次送审仍不通过" data-node-context="例外路径">
-          <title>停止 · 第 10 次送审仍不通过 · 例外路径</title>
-          <rect x="684.4" y="346" width="92" height="52" rx="8" class="c-mask"/>
-          <rect x="684.4" y="346" width="92" height="52" rx="8" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
-          <g aria-hidden="true" data-semantic-sigil="stop" class="semantic-sigil s-security" transform="translate(690.4 352) scale(0.6875)">
+        <g id="node-stop" data-node-id="stop" data-node-label="停止" tabindex="0" role="button" aria-label="聚焦停止，默认第 3 次 / 无进展 / 受阻, 例外路径" aria-pressed="false" data-node-kind="security" data-node-sublabel="默认第 3 次 / 无进展 / 受阻" data-node-context="例外路径">
+          <title>停止 · 默认第 3 次 / 无进展 / 受阻 · 例外路径</title>
+          <rect x="734.4" y="346" width="140" height="52" rx="8" class="c-mask"/>
+          <rect x="734.4" y="346" width="140" height="52" rx="8" class="c-security" data-animate="node" style="--step:12" stroke-width="1.5"/>
+          <g aria-hidden="true" data-semantic-sigil="stop" class="semantic-sigil s-security" transform="translate(740.4 352) scale(0.6875)">
             <circle cx="8" cy="8" r="5.3"/>
             <rect x="6.1" y="6.1" width="3.8" height="3.8" rx=".5" class="sigil-fill"/>
           </g>
-          <text data-node-label="" data-detail-anchor="" x="730.4" y="367" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">停止</text>
-          <text data-detail="context" x="730.4" y="384" class="t-muted" font-size="7" text-anchor="middle">第 10 次送审仍不通过</text>
+          <text data-node-label="" data-detail-anchor="" x="804.4" y="367" class="t-primary" font-size="11" font-weight="600" text-anchor="middle">停止</text>
+          <text data-detail="context" x="804.4" y="384" class="t-muted" font-size="8" text-anchor="middle">默认第 3 次 / 无进展 / 受阻</text>
         </g>
 
         <!-- Edge labels -->
         <g data-detail="context" data-edge-from="build" data-edge-to="test" data-edge-label="构建产物" data-edge-key="0" data-edge-id="build_to_test">
-          <rect x="268" y="100" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="292.2" y="110" class="t-muted" font-size="8" text-anchor="middle">构建产物</text>
+          <rect x="324" y="100" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="348.2" y="110" class="t-muted" font-size="8" text-anchor="middle">构建产物</text>
         </g>
-        <g data-detail="context" data-edge-from="fix" data-edge-to="build" data-edge-label="改完重跑构建" data-edge-key="1" data-edge-id="fix_to_build">
-          <rect x="295.4" y="345" width="67.6" height="14" rx="3" class="c-mask"/>
-          <text x="329.2" y="355" class="t-edge-dashed" font-size="8" text-anchor="middle">改完重跑构建</text>
+        <g data-detail="context" data-edge-from="fix" data-edge-to="build" data-edge-label="按影响面重建 / 复测" data-edge-key="1" data-edge-id="fix_to_build">
+          <rect x="324.59999999999997" y="345" width="101.2" height="14" rx="3" class="c-mask"/>
+          <text x="375.2" y="355" class="t-edge-dashed" font-size="8" text-anchor="middle">按影响面重建 / 复测</text>
         </g>
         <g data-detail="context" data-edge-from="handoff" data-edge-to="review" data-edge-label="第 N 轮送审" data-edge-key="2" data-edge-id="handoff_to_review">
-          <rect x="575" y="173" width="62.8" height="14" rx="3" class="c-mask"/>
-          <text x="606.4" y="183" class="t-muted" font-size="8" text-anchor="middle">第 N 轮送审</text>
+          <rect x="649" y="173" width="62.8" height="14" rx="3" class="c-mask"/>
+          <text x="680.4" y="183" class="t-muted" font-size="8" text-anchor="middle">第 N 轮送审</text>
         </g>
 
         <g data-detail="context" data-edge-from="review" data-edge-to="commit" data-edge-label="审查通过" data-edge-key="4" data-edge-id="review_to_commit">
-          <rect x="667.1999999999999" y="226" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="691.4" y="236" class="t-edge-emphasis" font-size="8" text-anchor="middle">审查通过</text>
+          <rect x="780.1999999999999" y="190" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="804.4" y="200" class="t-edge-emphasis" font-size="8" text-anchor="middle">审查通过</text>
         </g>
         <g data-detail="context" data-edge-from="review" data-edge-to="fix" data-edge-label="审查退回" data-edge-key="5" data-edge-id="review_to_fix">
-          <rect x="541.6999999999999" y="352" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="565.9" y="362" class="t-edge-security" font-size="8" text-anchor="middle">审查退回</text>
+          <rect x="620.6999999999999" y="352" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="644.9" y="362" class="t-edge-security" font-size="8" text-anchor="middle">审查退回</text>
         </g>
 
         <g data-detail="context" data-edge-from="test" data-edge-to="fix" data-edge-label="测试不通过" data-edge-key="7" data-edge-id="test_to_fix">
-          <rect x="397.4" y="211" width="58" height="14" rx="3" class="c-mask"/>
-          <text x="426.4" y="221" class="t-edge-security" font-size="8" text-anchor="middle">测试不通过</text>
+          <rect x="471.4" y="211" width="58" height="14" rx="3" class="c-mask"/>
+          <text x="500.4" y="221" class="t-edge-security" font-size="8" text-anchor="middle">测试不通过</text>
         </g>
         <g data-detail="context" data-edge-from="test" data-edge-to="handoff" data-edge-label="测试通过" data-edge-key="8" data-edge-id="test_to_handoff">
-          <rect x="462.2" y="100" width="48.4" height="14" rx="3" class="c-mask"/>
-          <text x="486.4" y="110" class="t-edge-emphasis" font-size="8" text-anchor="middle">测试通过</text>
+          <rect x="545.1999999999999" y="100" width="48.4" height="14" rx="3" class="c-mask"/>
+          <text x="569.4" y="110" class="t-edge-emphasis" font-size="8" text-anchor="middle">测试通过</text>
         </g>
 
         <!-- Legend -->
@@ -5585,12 +5585,26 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
       <div class="card">
         <div class="card-header">
           <div class="card-dot cyan"></div>
-          <h3>两个独立 Agent</h3>
+          <h3>两个角色</h3>
         </div>
         <ul>
-          <li>开发 Agent 自己构建、自己测试，没有独立 QA 环节</li>
-          <li>审查 Agent 只按材料下判断，不改代码</li>
-          <li>说明写不清或测试不足，审查退回补充</li>
+          <li>开发角色可由主 Agent 直接承担，开发子 Agent 只在并行或隔离需要时派</li>
+          <li>审查必须换上下文独立进行，只读、不改代码</li>
+          <li>材料写不清或测试不足，审查可以退回补充</li>
+        </ul>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <div class="card-dot violet"></div>
+          <h3>审查闭环</h3>
+        </div>
+        <ul>
+          <li>首轮全量复核；返工轮交回同一审查 Agent</li>
+          <li>带审查台账：上轮结论与阻塞项、已审范围、继承项依据</li>
+          <li>只审上轮阻塞项闭环 + 本轮增量/受影响面</li>
+          <li>未改动且可证明解耦则继承并标依据；证明不了就重审</li>
+          <li>范围外历史问题只作观察，不计阻塞</li>
         </ul>
       </div>
 
@@ -5600,22 +5614,10 @@ OTHER DEALINGS IN THE FONT SOFTWARE.
           <h3>门禁与上限</h3>
         </div>
         <ul>
-          <li>测试与审查都通过才提交，提交由开发 Agent 执行、需单独授权</li>
-          <li>轮次按送审计：默认第 10 次送审仍不通过就停止</li>
-          <li>任何改码都作废已通过的测试与审查，从构建重来</li>
-          <li>停止时说明原因，并列出还残留哪些问题</li>
-        </ul>
-      </div>
-
-      <div class="card">
-        <div class="card-header">
-          <div class="card-dot violet"></div>
-          <h3>送审要写清楚</h3>
-        </div>
-        <ul>
-          <li>本次是新增功能还是修 Bug</li>
-          <li>处理逻辑：为什么这么改</li>
-          <li>做了哪些测试、覆盖到哪里</li>
+          <li>测试与审查都通过才可提交；提交需单独授权</li>
+          <li>默认 3 次有效送审；同一阻塞项连续两轮无进展、受阻也停</li>
+          <li>单轮超 20–30 分钟或连续两轮没减少阻塞项，先汇报再定</li>
+          <li>轮次只计同一对象的有效审查结论；通过不等于授权提交</li>
         </ul>
       </div>
     </div>

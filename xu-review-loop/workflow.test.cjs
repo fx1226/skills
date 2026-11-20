@@ -121,3 +121,26 @@ test("只说验证不充分却没有具体缺口，不是有效审查结论", as
   assert.equal(result.status, "review-failed");
   assert.equal(result.round, 0);
 });
+
+test("默认送审上限为 3 次", async () => {
+  const blocking = { where: "verify.sh:2", problem: "缺断言", fix: "增加断言", severity: "blocking" };
+  const rejected = { ...rejection, findings: [blocking] };
+  const { result } = await simulate(
+    [verified, rejected, verified, rejected, verified, rejected],
+  );
+  assert.equal(result.status, "stopped");
+  assert.equal(result.round, 3);
+  assert.equal(result.residual[0].problem, "缺断言");
+});
+
+test("返工轮把上一轮审查结论交给下一轮审查者闭环核对", async () => {
+  const blocking = { where: "verify.sh:2", problem: "缺断言", fix: "增加断言", severity: "blocking" };
+  const rejected = { ...rejection, findings: [blocking] };
+  const { requests } = await simulate([verified, rejected, verified, approval]);
+
+  assert.doesNotMatch(requests[1].prompt, /上一轮（第/);
+  assert.match(requests[3].prompt, /上一轮（第 1 次送审）审查结论/);
+  assert.match(requests[3].prompt, /缺断言/);
+  assert.match(requests[3].prompt, /observed 缺同一版本的原始输出/);
+  assert.match(requests[3].prompt, /逐条确认上述阻塞项和证据缺口是否闭环/);
+});
