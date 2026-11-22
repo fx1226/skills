@@ -1,4 +1,0 @@
-interface:
-  display_name: "Xu Delivery Loop"
-  short_description: "交付闭环：构建自测、独立审查与增量复审"
-  default_prompt: "使用 $xu-delivery-loop 在改码后构建、自测并交独立审查；退回时固定同一审查者增量复审，按影响面复验，无需重新实现已有改动。"

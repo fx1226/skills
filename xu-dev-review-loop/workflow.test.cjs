@@ -19,7 +19,10 @@ const snapshot = "verify.sh 和 version.txt 的指纹 @ fixture-r4a";
 const resultFor = (id, status, evidence, subject = snapshot) => ({
   id, status, snapshot: subject, evidence,
 });
-const submission = (...results) => ({ snapshot, summary: "验证已有脚本，无改动", results });
+const submission = (...results) => ({
+  snapshot, summary: "验证已有脚本，无改动",
+  selfReview: "核对了 verify.sh 的版本判断及已有脚本的验证范围", results,
+});
 const verified = submission(resultFor("observed", "passed", "隔离 SVN：输出 fixture-r4a，退出 0"));
 const approval = { snapshot, summary: "证据充分", findings: [], validationAdequate: true, gaps: [] };
 const gap = "observed 缺同一版本的原始输出，请补记录";
@@ -56,6 +59,30 @@ test("SVN 已有脚本无需构建命令，证据与审查一致即可通过", a
   assert.equal(result.status, "approved");
   assert.equal(result.round, 1);
   assert.deepEqual(result.lastSubmission.results, verified.results);
+});
+
+test("有通过的测试但没有开发者自查记录，不交给 Reviewer", async () => {
+  const { requests, result } = await simulate([{ ...verified, selfReview: "  " }, approval]);
+  assert.equal(result.status, "dev-failed");
+  assert.equal(result.round, 0);
+  assert.equal(requests.length, 1);
+});
+
+test("同一版本可以凭澄清通过，命名建议随批准保留", async () => {
+  const concern = { where: "verify.sh:2", problem: "空参会导致失败", fix: "核实默认值", severity: "blocking" };
+  const nit = { where: "verify.sh:3", problem: "变量名较短", fix: "可换成 version", severity: "non-blocking" };
+  const explanation = "verify.sh:1 已设置默认值，原验收命令正是无参运行";
+  const reply = { ...verified, summary: explanation };
+  const { requests, result } = await simulate([
+    verified, { ...approval, findings: [concern, nit] }, reply, { ...approval, findings: [nit] },
+  ]);
+  assert.ok(requests[2].prompt.includes(nit.problem));
+  assert.ok(requests[3].prompt.includes(explanation));
+  assert.ok(requests[3].prompt.includes(concern.problem));
+  assert.equal(result.status, "approved");
+  assert.equal(result.round, 2);
+  assert.equal(result.lastSubmission.snapshot, verified.snapshot);
+  assert.deepEqual(result.nonBlocking, [nit]);
 });
 
 test("一个必验项受阻时保留其余验证证据，但不计轮也不判为通过", async () => {

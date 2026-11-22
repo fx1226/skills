@@ -27,6 +27,7 @@ const severity = choice("blocking", "non-blocking");
 const submissionSchema = object({
   snapshot: string,
   summary: string,
+  selfReview: string,
   results: array(object({ id: string, status: checkStatus, snapshot: string, evidence: string })),
 });
 const verdictSchema = object({
@@ -44,7 +45,9 @@ ${contract}
 ${feedback ? `上一轮需处理的问题或证据缺口：\n${JSON.stringify(feedback, null, 2)}` : "已有对象直接验证；需要实现时先做授权内的必要改动。"}
 
 先完成可独立执行的必验项。缺权限或环境只报受阻；按授权修复范围内问题，修过则复验受影响项；同一失败反复修复仍不过就报告卡点。只缺证据时先补证据，不为返工而改代码。无提交、部署或中断外部环境的隐含授权。
-summary 写改动范围（可无改动）、处理及取舍。snapshot 按 scope 约定的方法及格式生成标识；验运行时还需确认产物／运行版本确与对象对应，未能确定时据实填写（未知可填空字符串）。
+首轮送审前自行通读完整 diff（无 diff 时核对约定对象），检查任务范围、实现及测试覆盖；修改后自查增量并复验。selfReview 写实际检查的范围与结论，同一快照可沿用自查记录。
+summary 写改动范围、处理及取舍。复审时逐项答复反馈，说明修复、补证或澄清的依据。可引用已有代码或测试解释原实现，同一快照可原样送审。非阻塞建议可说明采纳与否。
+snapshot 按 scope 约定的方法及格式生成标识；验运行时还需确认产物／运行版本确与对象对应，未能确定时据实填写（未知可填空字符串）。
 results 按必验项 id 各回一条 passed、failed 或 blocked。每项 evidence 写实际方法、环境、观察结果或卡点与尝试；passed 的 snapshot 必须是证据实际对应的送审对象，不能把旧版本的结果挪用到新版本。`;
 
 const priorLedger = (review, round) => !review || round <= 1 ? "" : `\n上一轮（第 ${round - 1} 次送审）审查结论，供闭环核对（待核实，不得直接当作本轮通过依据）：\n${JSON.stringify({
@@ -59,7 +62,7 @@ const reviewBrief = (round, submission, previousReview) => `你是独立审查 A
 ${contract}
 第 ${round} 次拟送审，开发侧送审材料（待核实）：\n${JSON.stringify(submission, null, 2)}
 ${priorLedger(previousReview, round)}
-从现场核实可复核版本／指纹与运行版本对应关系，snapshot 按 scope 约定的方法及格式生成（若无法确认则填空字符串，不照抄）。按 xu-code-review 的取证、规范、需求、可靠性与安全规则核对源码／变更及相关上下文。逐项检查证据是否满足通过条件、覆盖关键风险、且与版本一致。
+从现场核实可复核版本／指纹与运行版本对应关系，snapshot 按 scope 约定的方法及格式生成（若无法确认则填空字符串，不照抄）。每轮按 xu-code-review 独立审查本次完整 diff（无 diff 时核对约定对象）及必要上下文，核实开发者的自查与逐项答复。逐项检查证据是否满足通过条件、覆盖关键风险、且与版本一致。澄清成立可关闭原阻塞项并在同一版本上批准，非阻塞建议可随批准保留。
 每条 findings 写明 where、problem、fix、severity；未解决的阻塞缺陷用 blocking。validationAdequate 为 false 时，gaps 必须具体写缺哪个验收项及需要补什么；充分时 gaps 为空。`;
 
 async function ask(prompt, options) {
@@ -96,6 +99,9 @@ while (round < maxRounds) {
       incomplete: incomplete.map((item) => item.id), lastSubmission: dev, feedback,
     };
   }
+  if (!text(dev.selfReview)) {
+    return { status: "dev-failed", round, reason: "送审缺少开发者自查范围与结论", lastSubmission: dev, feedback };
+  }
 
   phase("独立审查");
   const review = await ask(reviewBrief(next, dev, previousReview), {
@@ -131,6 +137,10 @@ while (round < maxRounds) {
       lastSubmission: dev,
     };
   }
-  feedback = { blocking, gaps: review.gaps, lastSubmission: dev };
+  feedback = {
+    blocking, gaps: review.gaps,
+    nonBlocking: review.findings.filter((item) => item.severity === "non-blocking"),
+    lastSubmission: dev,
+  };
   previousReview = review;
 }

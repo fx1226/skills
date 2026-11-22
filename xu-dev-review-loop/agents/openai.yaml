@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xu Dev Review Loop"
+  short_description: "提交前由开发者自测、自查完整变更，独立审查者核实答复并复审"
+  default_prompt: "使用 $xu-dev-review-loop 对本次变更完成自测和 diff 自查，再交独立审查；逐项处理反馈，请同一审查者复核并报告能否提交。"
