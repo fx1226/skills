@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+- Add OpenCode-native `fr-*` subagent profiles with parent-model inheritance and role-specific permissions. Wire each FR skill to explicit profile IDs and `sessionID` continuation, and document the separate agent installation required outside this repository.
+- Enforce role-isolated Agent execution across the FR workflows. The main Agent only orchestrates; requirements analysis, design, development, test-case authorship, each review role, and formal test execution use separate contexts, with same-role continuity for rework. Route test defects through the original developer, code reviewer, and test executor, and report a blockage instead of letting the orchestrator fill an unavailable role. The optional program gate records explicit same-role developer handoffs instead of claiming session continuity.
+
 ## 0.2.0 - 2026-11-22
 
 - Add `xu-fr-flow`, `xu-design-review-loop`, and `xu-dev-test-loop` for explicitly invoked FR delivery. Requirements/feasibility, technical design, and developer test cases remain human approval gates; design and black-box cases use independent read-only review with bounded same-reviewer rework. Keep formal case design after code review, bind local/device execution evidence to the current snapshot, return test-driven fixes to `xu-dev-review-loop`, and report QA handoff status without claiming QA acceptance.

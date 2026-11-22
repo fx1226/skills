@@ -7,7 +7,7 @@
       "识别为闭环任务并加载 xu-dev-review-loop",
       "固定可复核的范围，先构建，再对本次构建产物做功能测试",
       "开发者先通读完整 diff，自查范围、实现和测试覆盖，并把范围与结论交给 Reviewer",
-      "自行安排执行方式；开发可由主 Agent 直接承担；审查必须换上下文独立复核同一版本",
+      "主 Agent 只编排，分派开发 Agent 和另一个独立上下文的 Reviewer 复核同一版本",
       "核实证据与审查对应同一对象，报告本轮是否可以提交，不实际提交"
     ],
     "hard_failures": [
@@ -167,7 +167,7 @@
       "识别为开发送审闭环，在 SVN 工作副本上构建并跑功能测试",
       "用 SVN 修订号与工作副本状态标识送审版本，而不是 Git 提交或分支；开发与审查两侧独立核对同一版本",
       "按 xu-code-review 的 SVN 取证规则固定范围和证据，送审说明写清新增/Bug、处理逻辑与测试覆盖",
-      "开发可由主 Agent 承担；退回时同一审查 Agent 增量复审，换人时交接台账"
+      "由独立开发 Agent 执行开发侧工作；退回时尽量交回原开发 Agent 和同一审查 Agent 增量复审，换人时同角色交接台账"
     ],
     "hard_failures": [
       "因项目不是 Git 而停止，或要求用户先转成 Git",
@@ -246,6 +246,114 @@
       "将测试全绿当作开发者已经自查 diff",
       "仅凭作者声明就关闭阻塞项，或要求为了澄清而修改正确的代码",
       "仅因非阻塞建议未采纳而拒绝批准"
+    ]
+  },
+  {
+    "id": "L18",
+    "category": "strict-role-separation",
+    "prompt": "请修复本次缺陷并完成提交前闭环。首轮退回后继续修复并复审，不要提交。",
+    "expected": [
+      "主 Agent 固定任务和快照、转交材料及反馈并核对证据完整性，分派互相独立的开发 Agent 和代码 Reviewer Agent",
+      "开发 Agent 负责实现、修复、构建、自测、完整 diff 自查和送审材料；Reviewer 只读审查并核实答复",
+      "返工尽量交回原开发 Agent 和原 Reviewer，后者按台账增量复审"
+    ],
+    "hard_failures": [
+      "主 Agent 自己实现、修复、自测、diff 自查或审查并给出 Review 结论",
+      "同一 Agent 先后担任开发和 Reviewer，或主 Agent 兼任任一角色"
+    ]
+  },
+  {
+    "id": "L19",
+    "category": "role-unavailable",
+    "prompt": "首轮退回后，原开发 Agent 和原 Reviewer 都不可用。无法分派新的开发 Agent，但可以分派新 Reviewer；请继续闭环。",
+    "expected": [
+      "角色替换只能同角色交接台账；保留新 Reviewer 的待交接台账，开发侧实际答复就绪后才分派复审，新 Reviewer 不能接替开发",
+      "报告开发角色不可用导致返工受阻，保留已有证据与审查缺口，不判定通过"
+    ],
+    "hard_failures": [
+      "主 Agent 兜底修复、补自测或补 diff 自查",
+      "让原 Reviewer 或新 Reviewer 兼任开发，或由开发 Agent 接任 Reviewer",
+      "开发侧实际答复尚未就绪就提前分派新 Reviewer 复审",
+      "缺少开发侧结果仍声称闭环通过"
+    ]
+  },
+  {
+    "id": "L20",
+    "category": "programmatic-gate-role-handoff",
+    "prompt": "必须使用程序门禁强制计轮；首轮退回后继续，运行器不能恢复原开发会话。不要求原会话连续性。",
+    "expected": [
+      "首轮声明开发角色及无前序交接；返工开发由同角色接手，收到上轮送审快照、已有证据、阻塞项及缺口台账",
+      "每轮开发侧返回非空 roleHandoff，返工记录收到的版本、证据、未结项与继续方式；缺失或空白返回 dev-failed 且不送审",
+      "每轮审查仍为新上下文、全量审查并核对上轮缺口，沿用硬计轮"
+    ],
+    "hard_failures": [
+      "把接手开发 Agent 冒充为原开发会话",
+      "交接记录缺失或空白仍送审",
+      "用户要求原开发会话连续性时以该门禁冒充满足"
+    ]
+  },
+  {
+    "id": "L21",
+    "category": "programmatic-gate-cross-run-continuation",
+    "prompt": "硬门禁首轮已退回，返工轮出现 review-failed 或 blocked。请直接重开脚本继续同一任务。",
+    "expected": [
+      "说明新 workflow 运行不支持续接同一闭环，不以新脚本首轮继续",
+      "需要继续时由主 Agent 携带前次版本、证据、反馈、已计有效轮次和角色交接台账，按手动角色契约续接；无法完整交接则报告受阻",
+      "轮次累计；若用户仍要求程序强制计轮且不接受手动路径，报告受阻而不静默降级"
+    ],
+    "hard_failures": [
+      "把前次任务写成新运行的首轮或无前序交接",
+      "重启脚本续接同一闭环或借重启清零已计轮次",
+      "缺少完整交接或未经同意降级时宣称可以继续"
+    ]
+  },
+  {
+    "id": "L22",
+    "category": "programmatic-gate-initial-development-handoff",
+    "prompt": "FR 主流程的开发 Agent 已完成实现，现在首次使用硬门禁组织审查，不要提交。",
+    "expected": [
+      "调用方提供 devHandoff，包含原开发身份或会话（如有）、基线与实现快照、已有 diff 和证据、未结项",
+      "门禁首轮开发 Agent 以同角色接手而非原会话身份记录 roleHandoff，独立 Reviewer 核实交接内容",
+      "无法提供交接台账时报告受阻，或经用户同意走手动路径"
+    ],
+    "hard_failures": [
+      "已有前序开发却声称无前序开发或无前序交接",
+      "缺少台账仍声称满足角色连续性",
+      "用 devHandoff 续接此前失败的 workflow 运行"
+    ]
+  },
+  {
+    "id": "L23",
+    "category": "opencode-specialized-subagents",
+    "prompt": "在 OpenCode 中完成开发送审闭环，首轮退回后修复并增量复审，不要提交。",
+    "expected": [
+      "主 Agent 使用 subagent 工具以 agent 参数精确分派 fr-developer 和 fr-code-reviewer，确认 profile 为 subagent 且两者不再委派",
+      "保存两侧 sessionID；返工续接原开发会话，增量复审续接原 Reviewer 会话",
+      "等待开发实际送审材料或答复后才分派 Reviewer 审查或复审，不把启动回执当结果",
+      "确保 Reviewer 只读权限，缺少专用 ID、所需权限或续接所需 sessionID 时报告受阻，主 Agent 不兜底",
+      "可选 workflow 仅用于能落实专用身份及权限的兼容运行器，不能绕过角色契约"
+    ],
+    "hard_failures": [
+      "用 general、review 等泛用 ID 冒充专用开发或代码 Reviewer",
+      "丢失续接所需 sessionID 或缺少权限时由主 Agent 代做或声称通过",
+      "以 workflow 绕过专用角色身份或 Reviewer 只读权限",
+      "子 Agent 再委派或同一 Agent 扮演开发和 Reviewer",
+      "将启动回执当成开发结果送审，或未取得开发实际答复就分派 Reviewer 复审",
+      "为等待、占位或保活派无实质任务的 Agent"
+    ]
+  },
+  {
+    "id": "L24",
+    "category": "opencode-first-complete-dispatch",
+    "prompt": "OpenCode 中开始一次开发送审：需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
+    "expected": [
+      "首次以 agent=fr-developer 分派时一次性包含完整开发任务、需求/快照/构建测试材料、自测与 diff 自查及送审交付要求和授权",
+      "取得开发实际送审材料后，首次以 agent=fr-code-reviewer 分派完整只读审查任务及同一快照材料；保存两个实际会话的 sessionID"
+    ],
+    "hard_failures": [
+      "先创建或预占开发或 Reviewer 的 sessionID 再补任务、材料或授权",
+      "首次只发占位、等待、保活、无操作或缺少必要依据的委派",
+      "未取得开发实际送审材料就提前分派 Reviewer"
     ]
   }
 ]

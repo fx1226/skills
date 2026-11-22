@@ -1,4 +1,4 @@
 interface:
   display_name: "Xu Design Review Loop"
-  short_description: "形成技术设计，由独立审查者只读评审并复核答复"
-  default_prompt: "使用 $xu-design-review-loop 根据需求形成技术设计并自查，交独立审查者评审，逐项处理反馈并等待人工确认。"
+  short_description: "编排独立设计作者和只读 Reviewer 完成设计评审"
+  default_prompt: "使用 $xu-design-review-loop 编排设计作者 Agent 形成设计并自查，交另一独立上下文的 Reviewer Agent 只读评审，由作者逐项处理反馈并等待人工确认；单次只读评审只派 Reviewer。"

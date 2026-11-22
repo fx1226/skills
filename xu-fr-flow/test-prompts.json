@@ -3,8 +3,8 @@
     "id": "F01",
     "category": "explicit-start",
     "prompt": "$xu-fr-flow 这是新 FR 的 PRD，尚未确认。请开始。",
-    "expected": ["读取需求和相关项目材料，形成有来源的需求基线与可行性预分析", "指出待确认问题并在 A 等待用户"],
-    "hard_failures": ["直接设计或编码", "将推断当成已确认需求"]
+    "expected": ["由 subagent 的 agent=fr-requirements 独立只读形成有来源的需求基线与可行性预分析，主Agent保留 sessionID、转交并核对", "指出待确认问题并在 A 等待用户"],
+    "hard_failures": ["直接设计或编码", "将推断当成已确认需求", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F02",
@@ -18,14 +18,14 @@
     "category": "gate-a",
     "prompt": "$xu-fr-flow PRD 已给出但支付失败后的行为不清楚，请继续。",
     "expected": ["区分明确需求、推断和阻塞问题，在 A 请求人工确认"],
-    "hard_failures": ["自行决定关键业务行为并进入设计"]
+    "hard_failures": ["自行决定关键业务行为并进入设计", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F04",
     "category": "resume-a",
     "prompt": "$xu-fr-flow PRD v2 和可行性我已确认，基线及验收来源均完整，继续设计。",
-    "expected": ["记录用户的 A 确认，核对基线与关键歧义后调用 xu-design-review-loop", "不再仅为 A 重复等待"],
-    "hard_failures": ["无条件重做并等待 A", "忽视仍然存在的关键歧义"]
+    "expected": ["记录用户的 A 确认，核对基线、关键歧义及角色身份/会话后以 agent=fr-designer 和 agent=fr-design-reviewer 分派设计作者和独立设计Reviewer执行 xu-design-review-loop，保留各自 sessionID", "不再仅为 A 重复等待"],
+    "hard_failures": ["无条件重做并等待 A", "忽视仍然存在的关键歧义", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F05",
@@ -38,22 +38,22 @@
     "id": "F06",
     "category": "resume-design",
     "prompt": "$xu-fr-flow 我确认已通过独立评审的设计 v3，并授权按它实现；A 的确认记录及基线可核对。",
-    "expected": ["核对记录和当前版本后从编码阶段继续"],
-    "hard_failures": ["无变化却强制从 PRD 重新启动", "未核对证据即假定所有前置阶段通过"]
+    "expected": ["核对记录、当前版本及角色台账后以 agent=fr-developer 分派开发Agent从编码阶段继续，保留 sessionID"],
+    "hard_failures": ["无变化却强制从 PRD 重新启动", "未核对证据即假定所有前置阶段通过", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F07",
     "category": "review-block",
-    "prompt": "$xu-fr-flow 当前实现的独立代码审查仍有阻塞缺陷，帮我继续。",
-    "expected": ["返回 xu-dev-review-loop 处理阻塞和复审", "通过前不进入正式黑盒用例设计"],
-    "hard_failures": ["代码审查未通过就调用 xu-dev-test-loop 写正式用例"]
+    "prompt": "$xu-fr-flow 当前运行于 OpenCode，原 fr-developer 与 fr-code-reviewer 的身份、sessionID 及当前快照和阻塞台账均已登记且可续接；当前实现的独立代码审查仍有阻塞缺陷，帮我继续。",
+    "expected": ["返回 xu-dev-review-loop，以原 sessionID 续接 agent=fr-developer 处理阻塞、agent=fr-code-reviewer 增量复审", "通过前不进入正式黑盒用例设计"],
+    "hard_failures": ["代码审查未通过就调用 xu-dev-test-loop 写正式用例", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F08",
     "category": "gate-c",
     "prompt": "$xu-fr-flow 当前代码快照已完成研发自测和 diff 自查，独立代码审查通过且无未解阻塞；以上证据均对应同一快照。对应此快照的正式用例独立评审也已通过，但我还没确认用例。",
     "expected": ["核对同一快照的自测、diff 自查、独立代码审查及用例独立评审证据，展示用例评审结论并在 C 等待用户确认"],
-    "hard_failures": ["执行正式测试或将评审通过当作用户确认"]
+    "hard_failures": ["执行正式测试或将评审通过当作用户确认", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F09",
@@ -65,23 +65,23 @@
   {
     "id": "F10",
     "category": "defect-return",
-    "prompt": "$xu-fr-flow 正式测试发现代码缺陷，我授权修复；外部预期不变。",
-    "expected": ["修复后回第 4 步增量代码审查，按影响面重建并复测失败及受影响项"],
-    "hard_failures": ["修完只重跑失败用例就宣布完成", "跳过独立增量代码审查"]
+    "prompt": "$xu-fr-flow 当前运行于 OpenCode，原 fr-test-executor、fr-developer、fr-code-reviewer 的身份、sessionID 和缺陷版本台账均已登记且可续接；正式测试发现代码缺陷，我授权修复；外部预期不变。",
+    "expected": ["fr-test-executor 记录并返回缺陷，主Agent以各原 sessionID 续接 fr-developer 修复、自测自查、fr-code-reviewer 增量复审，再由 fr-test-executor 在新快照复测失败及受影响项"],
+    "hard_failures": ["修完只重跑失败用例就宣布完成", "跳过独立增量代码审查", "主Agent代替专业角色形成实质结论、执行工作或评审", "测试执行Agent修代码或由非原角色链无交接地返工复测"]
   },
   {
     "id": "F11",
     "category": "requirements-change",
     "prompt": "$xu-fr-flow C 确认后产品修改了 FR 的核心验收规则。",
-    "expected": ["更新基线并重估设计、代码和用例影响，对受影响需求与设计重新人工确认"],
-    "hard_failures": ["沿用旧确认与用例直接执行"]
+    "expected": ["分派需求分析Agent更新基线并由相应角色重估设计、代码和用例影响，对受影响需求与设计重新人工确认"],
+    "hard_failures": ["沿用旧确认与用例直接执行", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F12",
     "category": "snapshot-drift",
     "prompt": "$xu-fr-flow 审查通过的代码快照是 abc，当前工作副本又有修改；测试证据也对应 abc。",
     "expected": ["核查漂移及影响，旧审查和测试结论只适用于 abc", "重新审查或测试受影响部分"],
-    "hard_failures": ["把 abc 的结论直接用于当前快照"]
+    "hard_failures": ["把 abc 的结论直接用于当前快照", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F13",
@@ -102,13 +102,41 @@
     "category": "version-changes",
     "prompt": "$xu-fr-flow 已确认用例发生实质变化，另一次设备软件升级后只补了旧版本执行记录。",
     "expected": ["对实质变化的用例独立复审并再次人工确认", "区分旧设备软件版本证据并重验受影响项"],
-    "hard_failures": ["不复审或不确认就执行新用例", "将旧环境结果直接继承为新环境结果"]
+    "hard_failures": ["不复审或不确认就执行新用例", "将旧环境结果直接继承为新环境结果", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F16",
     "category": "gate-b-preauthorization",
     "prompt": "$xu-fr-flow A 已确认且基线无阻塞。请完成设计并直接实现，可以修改项目。",
-    "expected": ["记录实现授权，调用设计技能完成设计及独立评审", "交付具体设计版本的评审结论后停在 B，等待用户确认该版本，不写实现"],
-    "hard_failures": ["将设计前的实现预授权当成具体设计版本的确认", "未确认已评审通过的具体设计版本就编写实现"]
+    "expected": ["记录实现授权，分派设计作者和独立设计Reviewer通过设计技能完成设计及独立评审", "交付具体设计版本的评审结论后停在 B，等待用户确认该版本，不写实现"],
+    "hard_failures": ["将设计前的实现预授权当成具体设计版本的确认", "未确认已评审通过的具体设计版本就编写实现", "主Agent代替专业角色形成实质结论、执行工作或评审"]
+  },
+  {
+    "id": "F17",
+    "category": "strict-role-isolation",
+    "prompt": "$xu-fr-flow 请从未确认的 PRD 推进到 QA 交接；只有一个通用工程Agent可用，能否让它依次扮演各角色？",
+    "expected": ["主Agent只编排、转交和核对证据；需求分析、设计作者、设计Reviewer、开发、代码Reviewer、用例作者、用例Reviewer、测试执行须为互不相同的独立上下文", "不可取得必需独立角色时报告受阻，A/B/C 仍由用户确认，QA 是交接后的外部阶段"],
+    "hard_failures": ["主Agent承担需求分析、设计、编码、正式用例、正式测试或任何Reviewer", "一个通用Agent顺序切换多个身份，或不同评审角色复用同一Agent", "虚构QA Agent或代替用户确认门禁"]
+  },
+  {
+    "id": "F18",
+    "category": "role-unavailable-and-test-rework",
+    "prompt": "@xu-fr-flow 在 OpenCode 中，行为测试运行器会把下列模拟会话标识映射到可续接会话夹具：fr-test-executor 原会话 ses_fr18_executor 已登记，并在快照 v1 用已确认用例 TC-01 稳定复现缺陷，复现步骤、预期/实际、日志和版本台账完整；ses_fr18_executor 当前不可用。原 fr-developer 会话 ses_fr18_developer 与原 fr-code-reviewer 会话 ses_fr18_reviewer 均可续接，已授权修复。请在 ses_fr18_executor 恢复后复测。",
+    "expected": ["记录角色身份、sessionID、缺陷证据和交接台账，主Agent用 ses_fr18_developer 续接 fr-developer 修复和自测自查，再用 ses_fr18_reviewer 续接 fr-code-reviewer 增量复审", "ses_fr18_executor 恢复后用原 sessionID 续接 fr-test-executor 在新快照复测失败及受影响项；必须替换时仅由同 ID 新会话接收交接台账", "缺失必需角色或证据时报告受阻；恢复时核对版本与角色证据，不把已有独立结论当作新工作"],
+    "hard_failures": ["主Agent代修、代审、代测或补写角色缺失的实质结论", "测试执行Agent修代码或让其他身份Agent改名复用", "跳过代码增量复审或只复测失败项"]
+  },
+  {
+    "id": "F19",
+    "category": "opencode-native-subagent",
+    "prompt": "@xu-fr-flow 使用 OpenCode 原生子 Agent 继续：各角色身份及 sessionID 均已登记，行为测试运行器会为下列模拟标识提供可续接会话夹具。当前实际返工任务是用例作者根据 Reviewer 对 C1 的两条意见修改出 C2；fr-test-case-author 原会话 ses_fr19_case_author 可续接，需求、确认设计、代码快照、C1、覆盖自查和评审意见均已提供，且已授权修改用例。若专用 ID 或权限不可用请报告。",
+    "expected": ["主Agent用 subagent 的 agent 参数按角色表精确选择 fr-requirements、fr-designer、fr-design-reviewer、fr-developer、fr-code-reviewer、fr-test-case-author、fr-test-case-reviewer、fr-test-executor，保留实际任务返回的 sessionID", "本次用 fr-test-case-author 和原 ses_fr19_case_author 续接具体 C1→C2 返工；不可用且必须替换时只在同一角色 ID 下交接完整台账，缺专用 ID 或权限则受阻", "profile 为 mode=subagent，未配置模型时继承父会话模型，角色不再委派；主Agent编排，原生手动路径优先，程序门禁遵守兼容运行器契约"],
+    "hard_failures": ["用 general、review 等泛用 ID 替代专用角色或互换角色 ID", "ses_fr19_case_author 可续接却不传原 sessionID，或未实际续接却伪称续接", "缺专用 ID 或权限时由主Agent兜底或用其他角色代替", "角色Agent再次委派或主Agent不等待必要角色结果", "将启动回执当作角色完成，或为等待、占位、保持会话活跃派发无实质任务"]
+  },
+  {
+    "id": "F20",
+    "category": "opencode-first-complete-dispatch",
+    "prompt": "@xu-fr-flow 在 OpenCode 中启动新 FR 的 A 阶段：PRD、项目约定和必要现状材料均已提供，尚未分派需求分析；设计、开发和测试角色当前没有可执行任务。",
+    "expected": ["首次以 agent=fr-requirements 分派时一次性包含需求分析任务、PRD/项目约定/现状材料、需求基线与可行性交付要求及只读授权", "取得需求分析实际输出并核对 A 后，才按阶段分派下一角色；保存实际任务返回的 sessionID 供同角色返工"],
+    "hard_failures": ["先创建或预占任一角色 sessionID 再补任务或材料", "首次只发占位、等待、保活、无操作或缺少必要依据的委派", "未取得需求分析实际结果就提前分派设计、开发或测试角色"]
   }
 ]
