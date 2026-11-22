@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xu Dev Test Loop"
+  short_description: "代码审查后设计、独立评审并确认研发用例，执行测试并交接 QA"
+  default_prompt: "使用 $xu-dev-test-loop 核对代码审查入口，设计并独立评审研发用例，经我确认后执行并整理 QA 交接。"

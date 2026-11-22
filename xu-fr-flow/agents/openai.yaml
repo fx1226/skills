@@ -1,0 +1,4 @@
+interface:
+  display_name: "Xu FR Flow"
+  short_description: "从需求确认到研发测试和 QA 交接"
+  default_prompt: "使用 $xu-fr-flow 根据现有材料从正确阶段开始或恢复，在人工确认点等待，并报告版本、证据与阻塞。"

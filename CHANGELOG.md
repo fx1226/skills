@@ -2,6 +2,9 @@
 
 ## Unreleased
 
+## 0.2.0 - 2026-11-22
+
+- Add `xu-fr-flow`, `xu-design-review-loop`, and `xu-dev-test-loop` for explicitly invoked FR delivery. Requirements/feasibility, technical design, and developer test cases remain human approval gates; design and black-box cases use independent read-only review with bounded same-reviewer rework. Keep formal case design after code review, bind local/device execution evidence to the current snapshot, return test-driven fixes to `xu-dev-review-loop`, and report QA handoff status without claiming QA acceptance.
 - Rename `xu-delivery-loop` to `xu-dev-review-loop` and rework it into a bounded build → functional test → independent read-only review loop. The developer role may be the main agent itself; a review rejection returns to the same independent reviewer with a review ledger, so rework rounds re-review only the previous blockers, the new delta and affected areas while unchanged, provably decoupled parts inherit the earlier conclusion with its basis recorded. Developer-side build and test evidence are reused by impact instead of invalidated wholesale; the default valid-submission limit is 3 with a per-round cost checkpoint, and commit/deploy stay separately authorized. The optional program gate remains a hard-count path (fresh review context per round, no incremental inheritance) that passes prior review findings to the next reviewer for closure checks; manual orchestration is the default path. Version identification stays VCS-neutral, with Git, SVN, file and patch handling delegated to `xu-code-review`. Update the workflow diagram and behavioral scenarios accordingly.
 - Remove the `brain-memory` skill; long-term memory governance is no longer maintained here.
 - Flatten the repository so each skill package sits at the root, dropping the redundant `skills/` level.
