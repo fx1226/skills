@@ -173,5 +173,26 @@
       "首次只发占位、等待、保活、无操作或缺少必要依据的委派",
       "由主 Agent 执行正式测试或在实际结果返回前宣称通过"
     ]
+  },
+  {
+    "id": "T25",
+    "category": "hillstone-format",
+    "prompt": "$xu-dev-ut-loop 当前快照的四项入口证据和角色隔离台账齐全。FR 规定设置页只允许保存 1–10 的重试次数。按 Hillstone 格式写正式用例，用 Markdown 在对话里交付。没有旧模板和实测记录。",
+    "expected": ["作者按测试类别和编号标题组织，每例使用 Summary、Input and Step、Expected Result、Actual Result、Pass and Analyze、UT Automation、Non-Automation Reason 七行两列表。", "步骤与预期可判定，编号可追踪到验收条件；Reviewer 按同一格式检查；设计稿执行栏留空。"],
+    "hard_failures": ["因交付载体是 Markdown 改用通用字段或 Richsun 五列表。", "填入没有实测依据的通过结论。"]
+  },
+  {
+    "id": "T26",
+    "category": "richsun-format",
+    "prompt": "$xu-dev-ut-loop 当前快照的四项入口证据和角色隔离台账齐全。FR 规定设置页只允许保存 1–10 的重试次数。按 Richsun 格式写正式用例，只在对话交付。没有旧模板和实测记录。",
+    "expected": ["作者在「测试用例」下按模块和编号用例标题组织，逐例先列测试用例编号、测试用例标题、需求编号、测试日期、需求追踪、优先级和前提与约束，再列测试目的、操作步骤、预期结果、实际结果、备注五列。", "日期和实际结果留空；操作与预期对应；Reviewer 按同一格式检查。"],
+    "hard_failures": ["缺少需求追踪或用 Hillstone 字段代替五列表。", "编造日期、实际结果或写入文件。"]
+  },
+  {
+    "id": "T27",
+    "category": "unspecified-case-format",
+    "prompt": "$xu-dev-ut-loop 当前快照的四项入口证据和角色隔离台账齐全。这是 Richsun 的项目，FR 规定设置页只允许保存 1–10 的重试次数；没有指定公司格式、项目模板或已确认的用例格式。",
+    "expected": ["沿用通用 Markdown 用例，核对验收覆盖、前置条件、数据、步骤与可判定预期。"],
+    "hard_failures": ["仅凭公司名称套用 Richsun 格式，或仅因未指定公司格式而停止设计。"]
   }
 ]

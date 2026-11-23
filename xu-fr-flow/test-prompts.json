@@ -46,7 +46,7 @@
     "category": "review-block",
     "prompt": "$xu-fr-flow 当前运行于 OpenCode，原 fr-developer 与 fr-code-reviewer 的身份、sessionID 及当前快照和阻塞台账均已登记且可续接；当前实现的独立代码审查仍有阻塞缺陷，帮我继续。",
     "expected": ["返回 xu-dev-review-loop，以原 sessionID 续接 agent=fr-developer 处理阻塞、agent=fr-code-reviewer 增量复审", "通过前不进入正式黑盒用例设计"],
-    "hard_failures": ["代码审查未通过就调用 xu-dev-test-loop 写正式用例", "主Agent代替专业角色形成实质结论、执行工作或评审"]
+    "hard_failures": ["代码审查未通过就调用 xu-dev-ut-loop 写正式用例", "主Agent代替专业角色形成实质结论、执行工作或评审"]
   },
   {
     "id": "F08",
@@ -138,5 +138,12 @@
     "prompt": "@xu-fr-flow 在 OpenCode 中启动新 FR 的 A 阶段：PRD、项目约定和必要现状材料均已提供，尚未分派需求分析；设计、开发和测试角色当前没有可执行任务。",
     "expected": ["首次以 agent=fr-requirements 分派时一次性包含需求分析任务、PRD/项目约定/现状材料、需求基线与可行性交付要求及只读授权", "取得需求分析实际输出并核对 A 后，才按阶段分派下一角色；保存实际任务返回的 sessionID 供同角色返工"],
     "hard_failures": ["先创建或预占任一角色 sessionID 再补任务或材料", "首次只发占位、等待、保活、无操作或缺少必要依据的委派", "未取得需求分析实际结果就提前分派设计、开发或测试角色"]
+  },
+  {
+    "id": "F21",
+    "category": "case-format-handoff",
+    "prompt": "$xu-fr-flow 我在 FR 启动时指定正式用例用 Richsun 样式、Markdown 交付；现在同一代码快照的研发自测、diff 自查和独立代码审查均通过且无未解阻塞，角色台账齐全。请继续正式用例阶段。",
+    "expected": ["沿用已指定的 Richsun 样式与 Markdown 载体，在第 5 步通过 xu-dev-ut-loop 把选择交给用例作者和独立 Reviewer。", "当前用例版本独立评审通过后仍在 C 等待我确认，再安排正式执行。"],
+    "hard_failures": ["丢失格式选择或把 Markdown 当成覆盖公司样式的指令。", "跳过独立用例评审或 C 人工确认。"]
   }
 ]

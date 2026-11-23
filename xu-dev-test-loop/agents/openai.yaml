@@ -1,4 +1,0 @@
-interface:
-  display_name: "Xu Dev Test Loop"
-  short_description: "编排独立用例作者、评审者和执行者，确认后测试并交接 QA"
-  default_prompt: "使用 $xu-dev-test-loop 核对代码审查入口，分别派独立用例作者和只读 Reviewer；经我确认后派第三个独立执行者测试并形成 QA 交接。主 Agent 只编排和整合，不兼任或兜底。"
