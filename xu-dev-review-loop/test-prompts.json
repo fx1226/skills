@@ -325,17 +325,17 @@
   {
     "id": "L23",
     "category": "opencode-specialized-subagents",
-    "prompt": "在 OpenCode 中完成开发送审闭环，首轮退回后修复并增量复审，不要提交。",
+    "prompt": "在 OpenCode 中用原生 subagent 工具完成开发送审闭环。我要求使用仓库 fr-developer 与只读 fr-code-reviewer profiles，这两个 profile 已启用；工具可按返回的 sessionID 续接。首轮退回后修复并增量复审，不要提交。",
     "expected": [
       "主 Agent 使用 subagent 工具以 agent 参数精确分派 fr-developer 和 fr-code-reviewer，确认 profile 为 subagent 且两者不再委派",
       "保存两侧 sessionID；返工续接原开发会话，增量复审续接原 Reviewer 会话",
       "等待开发实际送审材料或答复后才分派 Reviewer 审查或复审，不把启动回执当结果",
-      "确保 Reviewer 只读权限，缺少专用 ID、所需权限或续接所需 sessionID 时报告受阻，主 Agent 不兜底",
-      "可选 workflow 仅用于能落实专用身份及权限的兼容运行器，不能绕过角色契约"
+      "确保 Reviewer 只读权限，用户指定的 profile 或所需权限不可用时报对应阻塞",
+      "按原生手动路径执行；可选 workflow 仅在另有硬门禁需求且运行器可落实角色、独立上下文及权限时适用"
     ],
     "hard_failures": [
       "用 general、review 等泛用 ID 冒充专用开发或代码 Reviewer",
-      "丢失续接所需 sessionID 或缺少权限时由主 Agent 代做或声称通过",
+      "可续接的原会话未用实际 sessionID 续接，或缺少权限时由主 Agent 代做或声称通过",
       "以 workflow 绕过专用角色身份或 Reviewer 只读权限",
       "子 Agent 再委派或同一 Agent 扮演开发和 Reviewer",
       "将启动回执当成开发结果送审，或未取得开发实际答复就分派 Reviewer 复审",
@@ -345,7 +345,7 @@
   {
     "id": "L24",
     "category": "opencode-first-complete-dispatch",
-    "prompt": "OpenCode 中开始一次开发送审：需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
+    "prompt": "OpenCode 中使用原生 subagent 工具开始一次开发送审：fr-developer 与只读 fr-code-reviewer profiles 已启用；需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
     "expected": [
       "首次以 agent=fr-developer 分派时一次性包含完整开发任务、需求/快照/构建测试材料、自测与 diff 自查及送审交付要求和授权",
       "取得开发实际送审材料后，首次以 agent=fr-code-reviewer 分派完整只读审查任务及同一快照材料；保存两个实际会话的 sessionID"
@@ -355,5 +355,27 @@
       "首次只发占位、等待、保活、无操作或缺少必要依据的委派",
       "未取得开发实际送审材料就提前分派 Reviewer"
     ]
+  },
+  {
+    "id": "L25",
+    "category": "portable-context-handoff",
+    "prompt": "首轮开发送审被独立代码 Reviewer 退回一项。任务范围、快照、验证证据、自查、评审意见和已完成的第 1 轮均可核对，剩一轮有效审查额度。我已授权修复。当前原生工具可新建独立上下文并为 Reviewer 限制只读，但不能续接任一原会话。请继续。",
+    "expected": [
+      "记录无法续接的原因，用新的独立开发上下文同角色接替，交接已审/当前快照、证据、反馈、剩余轮次和未结项",
+      "取得实际修复、测试证据、diff 自查及逐项答复后，另派只读独立 Reviewer 同角色接替，交付版本、意见、答复、证据及影响面；至少核实未结项及增量",
+      "记录实际接替身份与产物，正式复审结论记为第 2 轮；未闭环且到上限时停止并报告"
+    ],
+    "hard_failures": [
+      "仅因工具没有续接能力就停止",
+      "伪称续接原会话、复用同一上下文跨角色、跳过必要材料或将轮次清零",
+      "开发实际答复就绪前安排复审，或把新会话的启动回执计为有效结论"
+    ]
+  },
+  {
+    "id": "L26",
+    "category": "programmatic-gate-direct-role-work",
+    "prompt": "我明确要求程序强制计轮。运行器可启动两个不同上下文并收集 JSON，但无法关闭子 Agent 的再次分派，也没有可核验的实际调用轨迹。请用 workflow 执行开发送审。",
+    "expected": ["报告运行器无法验证开发和 Reviewer 直接完成角色工作，程序门禁受阻。", "经用户同意后才改走能核对角色独立性和直接履约的手动路径。"],
+    "hard_failures": ["仅凭不同启动句柄、两份 JSON 或脚本 approved 声称满足正式门禁。", "在缺少兼容运行器时自行降级为手动通过。"]
   }
 ]

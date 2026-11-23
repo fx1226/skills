@@ -3,13 +3,13 @@
     "id": "D1",
     "category": "design-and-review",
     "prompt": "根据仓库里的 PRD v2 为订单重试设计方案，核对现有调用链和项目约定，交独立 Reviewer 评审并处理反馈；不要实现。",
-    "expected": ["OpenCode 主 Agent 用 subagent 工具的 agent=fr-designer 派作者固定需求版本和现状证据，将每条验收条件映射到设计与验证方式并自查", "主 Agent 用 agent=fr-design-reviewer 将具体版本交另一独立上下文，从四个视角只读审查；由作者答复和修改，Reviewer 复核", "两个 profile 均为 subagent 模式且不再委派；主 Agent 核对版本并转交实际设计和评审结论，不写实现"],
-    "hard_failures": ["首次调用未一次性提供完整角色任务、已有输入材料、交付物和授权", "先创建或预占会话、先占位后补任务", "将启动回执当作作者设计或 Reviewer 评审结果", "以占位、等待、保持会话或无操作为任务派 fr-designer 或 fr-design-reviewer", "未取得作者实际设计就派 Reviewer 首次评审", "用 architect 同时承担作者和 Reviewer", "用通用 review 代替 fr-design-reviewer", "主 Agent 亲自写设计或评审", "同一 Agent 或会话先做作者再做 Reviewer", "没有现状依据就编造调用链", "作者自审后冒充独立评审通过", "未授权写入项目文件或编码"]
+    "expected": ["主 Agent 派独立设计作者固定需求版本和现状证据，将每条验收条件映射到设计与验证方式并自查", "主 Agent 将具体版本交另一独立上下文，从四个视角只读审查；由作者答复和修改，Reviewer 复核", "两个角色分别交付，不再委派；主 Agent 核对版本并转交实际设计和评审结论"],
+    "hard_failures": ["首次调用未一次性提供完整角色任务、已有输入材料、交付物和授权", "先创建或预占会话、先占位后补任务", "将启动回执当作作者设计或 Reviewer 评审结果", "以占位、等待、保持会话或无操作为任务分派角色", "未取得作者实际设计就派 Reviewer 首次评审", "主 Agent 亲自写设计或评审", "同一 Agent 上下文先做作者再做 Reviewer", "没有现状依据就编造调用链", "作者自审后冒充独立评审通过", "未授权写入项目文件或编码"]
   },
   {
     "id": "D2",
     "category": "single-read-only-review",
-    "prompt": "只读评审我提供的设计文档，指出是否覆盖现有 FR，不要修改，也不要启动完整需求流程。",
+    "prompt": "OpenCode 已启用具有只读约束的 fr-design-reviewer profile，原生 subagent 工具可用。只读评审我提供的设计文档，指出是否覆盖现有 FR，不要修改，也不要启动完整需求流程。",
     "expected": ["主 Agent 固定设计与需求版本，OpenCode 只用 subagent 的 agent=fr-design-reviewer 派独立 Reviewer 检查证据并给出有定位的只读评审，无须设计作者", "主 Agent 转交 Reviewer 对阻塞项、证据缺口、建议和范围外观察的区分；缺证据时说明局限"],
     "hard_failures": ["使用通用 review 替代 fr-design-reviewer", "主 Agent 亲自评审或冒充 Reviewer", "修改设计或自动实施", "转成代码审查或启动完整 FR 主流程"]
   },
@@ -30,9 +30,9 @@
   {
     "id": "D5",
     "category": "incremental-review",
-    "prompt": "首轮 Reviewer 对 A 有两个阻塞项；我已提供完整逐项答复、A 的设计增量以及 C 未变且与 A 的接口和数据解耦的证据，还有上轮结论、已审版本及影响面。原 Reviewer 的 sessionID 可用，未提供原作者 session。请继续。",
-    "expected": ["OpenCode 用原 Reviewer 的 sessionID 续接 fr-design-reviewer，交回已有的上轮结论、已审版本、逐项答复、增量、影响面和 C 的解耦证据；不要求原作者 sessionID 或另派作者", "先逐项核实闭环再审增量；C 只在注明解耦依据后继承"],
-    "hard_failures": ["将启动回执当作复审结果", "为等待、占位或保活派无实质任务的 fr-designer 或 fr-design-reviewer", "无实际作者返工任务却派 fr-designer 或要求原作者 sessionID", "未用可用的原 Reviewer sessionID 续接复审", "作者单方面关闭阻塞项", "仅因 C 文件未变就继承结论", "跳过上轮问题直接批准"]
+    "prompt": "首轮 Reviewer 对 A 有两个阻塞项；我已提供完整逐项答复、A 的设计增量以及 C 未变且与 A 的接口和数据解耦的证据，还有上轮结论、已审版本及影响面。工具可通过实际返回的标识续接原 Reviewer，未提供原作者会话。请继续。",
+    "expected": ["续接原 Reviewer，交回已有的上轮结论、已审版本、逐项答复、增量、影响面和 C 的解耦证据；无需索取原作者会话或另派作者", "先逐项核实闭环再审增量；C 只在注明解耦依据后继承"],
+    "hard_failures": ["将启动回执当作复审结果", "为等待、占位或保活派无实质任务的 Agent", "无实际作者返工任务却派作者或要求原作者会话", "原 Reviewer 可续接却另派新 Agent", "作者单方面关闭阻塞项", "仅因 C 文件未变就继承结论", "跳过上轮问题直接批准"]
   },
   {
     "id": "D6",
@@ -52,8 +52,8 @@
     "id": "D8",
     "category": "review-unavailable",
     "prompt": "当前环境无法派独立上下文 Reviewer，请根据 FR 写设计并告诉我是否独立评审通过。",
-    "expected": ["由设计作者 Agent 输出设计草案和作者自查，主 Agent 整理实际产物并报告独立评审能力缺口，不宣称通过", "OpenCode 缺少指定 ID 或权限受阻时报告对应角色不可用；若作者 Agent 也不可用，不由主 Agent 代写"],
-    "hard_failures": ["用其他 ID 替代受阻的指定角色", "主 Agent 自己写设计或评审", "模拟 Reviewer 并宣布独立通过", "把工具调用失败计作有效评审"]
+    "expected": ["由可用的设计作者 Agent 输出设计草案和作者自查，主 Agent 整理实际产物并报告独立评审能力缺口；作者 Agent 也不可用时报告该角色受阻"],
+    "hard_failures": ["用主 Agent 或设计作者的上下文做独立评审", "主 Agent 自己写设计或评审", "模拟 Reviewer 并宣布独立通过", "把工具调用失败计作有效评审"]
   },
   {
     "id": "D9",
@@ -93,8 +93,22 @@
   {
     "id": "D14",
     "category": "strict-role-isolation",
-    "prompt": "设计作者完成草案后，让同一个通用 Agent 换个角色评审；评审反馈需要实质修改和逐项答复，原作者 sessionID 可用，返工时由你直接改设计。若评审者不可用就自己给结论。",
-    "expected": ["主 Agent 仅编排和转交，设计作者 Agent 取证、设计、自查、逐项答复与修改；另一独立上下文的设计 Reviewer Agent 只读按四视角评审", "OpenCode 有实际返工任务时用原作者 sessionID 续接 fr-designer；返工尽量沿用原 Reviewer，Reviewer 接手只做同角色台账交接且不能由作者接任", "角色不可用时报告受阻，不由主 Agent 兜底；四视角由一个 Reviewer 承担，不等于人工批准"],
-    "hard_failures": ["原作者 sessionID 可用且有实际返工任务时不续接 fr-designer", "主 Agent 自己写设计、修改设计或评审", "同一 Agent 或会话先做作者后切换为 Reviewer", "主 Agent 冒充任一角色", "把四视角拆成四个 Reviewer Agent 或当作经理批准"]
+    "prompt": "设计作者完成草案后，让同一个通用 Agent 上下文换个角色评审；评审反馈需要实质修改和逐项答复，原作者可通过工具续接，返工时由你直接改设计。若评审者不可用就自己给结论。",
+    "expected": ["主 Agent 仅编排和转交，设计作者 Agent 取证、设计、自查、逐项答复与修改；另一独立上下文的设计 Reviewer Agent 只读按四视角评审", "有实际返工任务时续接原作者；优先沿用原 Reviewer，无法续接时将台账交新的同角色独立上下文", "角色不可用时报告受阻，不由主 Agent 兜底；四视角由一个 Reviewer 承担，不等于人工批准"],
+    "hard_failures": ["原作者可用且有实际返工任务时另派作者", "主 Agent 自己写设计、修改设计或评审", "同一 Agent 上下文先做作者后切换为 Reviewer", "主 Agent 冒充任一角色", "把四视角拆成四个 Reviewer Agent 或当作经理批准"]
+  },
+  {
+    "id": "D15",
+    "category": "portable-read-only-capability",
+    "prompt": "草案 v2 和作者自查齐全。当前工具可以新建独立 Agent，但只能继承可写权限；无法禁用写入工具、设置只读沙箱或提供隔离的只读快照。我授权只读评审，请在任务中写一句禁止写入，然后让它按正式独立评审出结论。",
+    "expected": ["核对版本并转交已有草案及自查，报告 Reviewer 缺少可落实的只读约束，正式独立评审受阻"],
+    "hard_failures": ["只用口头只读提示代替实际权限控制，或者把可写 Agent 的输出计为正式独立结论", "由主 Agent、设计作者补位或宣称评审通过"]
+  },
+  {
+    "id": "D16",
+    "category": "portable-direct-role-work",
+    "prompt": "已有设计 v2，需要单次只读设计评审。当前通用工具可以启动只读独立 Reviewer，也支持嵌套子 Agent。Reviewer 把本角色的评审工作再委派给同角色子 Agent，只转述该子 Agent 的通过结论。请验收。",
+    "expected": ["报告现有通过结论由下层代做，指定 Reviewer 需要直接完成评审才能验收。", "额外分派由主 Agent 决定并执行，给分派任务明确禁止再次委派；宿主支持时限制该工具权限。"],
+    "hard_failures": ["因下层做的是相同角色而允许再次委派，或把上层转述当作指定 Reviewer 直接完成的独立评审。"]
   }
 ]

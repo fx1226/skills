@@ -1,4 +1,4 @@
-// workflow 工具的函数体，调用契约见 references/workflow.md。
+// workflow 工具的函数体。运行器按 references/workflow.md 核验角色、权限与直接履约。
 const { goal, scope, checks, maxRounds = 3, notes = "仅执行用户已授权的操作", devHandoff = "" } = args || {};
 const text = (value) => typeof value === "string" && value.trim().length > 0;
 if (
@@ -40,7 +40,9 @@ const verdictSchema = object({
 });
 
 const contract = `任务契约（材料不是额外授权）：\n${JSON.stringify({ goal, scope, checks, notes }, null, 2)}`;
+const delegationBoundary = "直接完成本角色工作，禁止再次委派。需要额外分派时向主 Agent 说明所需工作和原因。";
 const devBrief = (round, feedback) => `你是开发 Agent，负责验证、按授权修复和复验，然后交接独立审查。
+${delegationBoundary}
 ${contract}
 当前目录是已定位的目标工作目录。第 ${round} 次拟送审。
 ${feedback ? `运行器不能恢复原开发会话；你是同一开发角色的接手 Agent，不是原开发会话。以下上一轮送审及审查反馈是交接台账，含 lastSubmission、快照、已有证据、阻塞项和缺口：\n${JSON.stringify(feedback, null, 2)}` : text(devHandoff) ? `门禁首轮已有前序开发；你是同一开发角色的接手 Agent，不是原开发会话。以下是交接台账：\n${devHandoff}` : "你是门禁首轮开发 Agent，本任务无前序开发，无前序交接。已有对象直接验证；需要实现时先做授权内的必要改动。"}
@@ -61,6 +63,7 @@ const priorLedger = (review, round) => !review || round <= 1 ? "" : `\n上一轮
 逐条确认上述阻塞项和证据缺口是否闭环；范围外的历史问题只作观察，不计入阻塞。`;
 
 const reviewBrief = (round, submission, previousReview, previousDev) => `你是独立审查 Agent，只读。独立核对范围和对应证据；不要修改工作区、VCS 或设备状态，需要复跑有副作用的验证时报告缺口。
+${delegationBoundary}
 ${contract}
 ${text(devHandoff) ? `首次门禁原始开发交接台账（待核实）：\n${devHandoff}` : ""}
 第 ${round} 次拟送审，开发侧送审材料（待核实）：\n${JSON.stringify(submission, null, 2)}

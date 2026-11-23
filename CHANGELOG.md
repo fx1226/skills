@@ -2,8 +2,8 @@
 
 ## Unreleased
 
+- Define portable roles, dispatch, evidence checks and same-role handoff for the FR workflows across OpenCode, Codex, Pi, DeepSeek Harness, and Kimi Code. OpenCode's optional `fr-*` profiles provide role-specific permissions and same-role continuation with `sessionID`.
 - Rename `xu-dev-test-loop` to `xu-dev-ut-loop` to reflect the developer unit testing (UT) stage.
-- Add OpenCode-native `fr-*` subagent profiles with parent-model inheritance and role-specific permissions. Wire each FR skill to explicit profile IDs and `sessionID` continuation, and document the separate agent installation required outside this repository.
 - Enforce role-isolated Agent execution across the FR workflows. The main Agent only orchestrates; requirements analysis, design, development, test-case authorship, each review role, and formal test execution use separate contexts, with same-role continuity for rework. Route test defects through the original developer, code reviewer, and test executor, and report a blockage instead of letting the orchestrator fill an unavailable role. The optional program gate records explicit same-role developer handoffs instead of claiming session continuity.
 
 ## 0.2.0 - 2026-11-22

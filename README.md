@@ -30,11 +30,11 @@ Private collection of Agent Skills used for software engineering work.
 
 Each Skill owns a small invocation file and discloses heavier reference material only when its workflow needs it.
 
-## OpenCode role agents
+## Workflow subagents
 
-The FR workflows use dedicated OpenCode subagent profiles from `.opencode/agents/`. The profiles inherit the parent session's model, use role-specific permissions, and are dispatched by explicit agent ID; the orchestrator reuses each returned `sessionID` for same-role rework.
+The FR workflows define logical roles and use the subagent tools available in the current harness. An orchestrator hands each role a versioned task, verifies its evidence, and advances through the human approval gates. See [subagent dispatch and handoff](xu-fr-flow/references/subagent-dispatch.md) for the capability checks and examples for OpenCode, Codex, Pi, DeepSeek Harness, and Kimi Code.
 
-OpenCode discovers skills and agents separately. When using these workflows outside this repository, install or link the role profiles into the target project's `.opencode/agents/` directory or the global `~/.config/opencode/agents/` directory in addition to installing the skills. Keep the `fr-` profile IDs unchanged and do not replace unrelated existing agents.
+The optional OpenCode profiles in `.opencode/agents/` map to the same `fr-*` roles. OpenCode discovers skills and profiles separately. To use these profiles in another project, install or link them into that project's `.opencode/agents/` directory or the global `~/.config/opencode/agents/` directory. Keep their IDs unchanged.
 
 ## Development
 
