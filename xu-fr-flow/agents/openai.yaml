@@ -1,6 +1,6 @@
 interface:
   display_name: "Xu FR Flow"
   short_description: "从需求确认到研发测试和 QA 交接"
-  default_prompt: "使用 $xu-fr-flow 严格隔离角色：主 Agent 只编排并核对证据，分派不同独立上下文执行各专业角色；从正确阶段开始或恢复，盘点角色台账，在人工确认点等待，报告版本、证据与阻塞；角色不可用时停止而不兜底。"
+  default_prompt: "使用 $xu-fr-flow 按 standard/lite 档位编排：分派独立角色完成需求、设计、开发、代码审查、用例与 UT；整轮测完再批量回流，日常输出状态卡，人工确认和授权不足时停止。"
 policy:
   allow_implicit_invocation: false

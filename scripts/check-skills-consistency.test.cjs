@@ -63,3 +63,31 @@ test("检出技能目录内残留 HTML 资产、死链、外逸链接与缺失�
     fs.rmSync(tempRoot, { recursive: true, force: true });
   }
 });
+
+test("检出超长正文、缺失离散终态、旧运行器和 Harness 绑定", () => {
+  const tempRoot = fs.mkdtempSync(path.join(os.tmpdir(), "skills-lightweight-"));
+  try {
+    copyRepoSubset(tempRoot);
+
+    const frSkillPath = path.join(tempRoot, "xu-fr-flow", "SKILL.md");
+    fs.appendFileSync(frSkillPath, `\n${"长".repeat(221)}\n`);
+    fs.mkdirSync(path.join(tempRoot, ".opencode", "agents"), { recursive: true });
+    fs.writeFileSync(path.join(tempRoot, ".opencode", "agents", "legacy.md"), "legacy\n");
+    fs.writeFileSync(path.join(tempRoot, "xu-dev-review-loop", "workflow.js"), "return null;\n");
+
+    for (const skillName of ["xu-fr-flow", "xu-design-review-loop", "xu-dev-review-loop", "xu-dev-ut-loop"]) {
+      const skillPath = path.join(tempRoot, skillName, "SKILL.md");
+      const content = fs.readFileSync(skillPath, "utf8");
+      fs.writeFileSync(skillPath, content.replace(/ADVANCE/g, "GO"));
+    }
+
+    const report = checkSkillsConsistency(tempRoot);
+    assert.equal(report.ok, false);
+    assert.ok(report.failures.some((item) => item.code === "OVERLONG_PROSE_LINE"));
+    assert.ok(report.failures.some((item) => item.code === "HARNESS_PROFILE_DIR_FORBIDDEN"));
+    assert.ok(report.failures.some((item) => item.code === "HARNESS_RUNNER_ASSET_FORBIDDEN"));
+    assert.ok(report.failures.some((item) => item.code === "MISSING_SHARED_CLAUSE"));
+  } finally {
+    fs.rmSync(tempRoot, { recursive: true, force: true });
+  }
+});

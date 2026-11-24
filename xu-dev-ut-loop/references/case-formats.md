@@ -4,7 +4,12 @@
 
 ## Hillstone
 
-完整 UT 报告按 `Testing Overview（总体测试说明）` → `单元测试环境` → 分类测试章节 → `Testing Tips To QA（对QA补充测试建议）` 组织。总览用 `Item No.`、`Short Description`、`Detail` 三列列出测试范围。按任务选用 `CLI Testing（命令行测试）`、`Function Testing（软件功能测试）` 等适用类别，类别下可按子功能分组。需要完整报告时参考样例保留评审人、修订历史、目录及适用的参考材料和评审纪要；仅交付用例时从相关测试类别开始。
+完整 UT 报告按 `Testing Overview（总体测试说明）` → `单元测试环境`
+→ 分类测试章节 → `Testing Tips To QA（对QA补充测试建议）` 组织。
+总览用 `Item No.`、`Short Description`、`Detail` 三列列出测试范围。
+按任务选用 `CLI Testing（命令行测试）`、`Function Testing（软件功能测试）` 等适用类别，
+类别下可按子功能分组。完整报告可保留评审人、修订历史、目录和评审纪要；
+仅交付用例时从相关测试类别开始。
 
 每条用例以编号标题定位，标题下放一张两列表格，左侧窄列为英文标签，右侧宽列写内容。Markdown 可用以下骨架，Word 表格从 `Summary` 行开始。
 

@@ -31,12 +31,18 @@ scripts/             (zero-dependency Node.js validation tools and unit tests)
 ```
 
 Each Skill owns a small invocation file and discloses heavier reference material only when its workflow needs it.
+The four orchestration skills follow one compact structure: entry, roles, linear steps, exception routes, and terminal states.
+Their prose lines stay within 220 characters outside tables and code fences.
 
 ## Workflow subagents
 
-The FR workflows are capability-driven and harness-agnostic: they define logical roles, stable context identities (`contextId` + `contextScope`), two-tier read-only isolation (`enforced` by default, or `verified-zero-write` only after explicit user approval with pre/post workspace/VCS state fingerprint checks), structured `flow-ledger` tracking, and explicit human approval gates (`standard` A/B/C or explicit redline-gated `lite` AB/C). Each standalone loop skill (`xu-design-review-loop`, `xu-dev-review-loop`, `xu-dev-ut-loop`) ships a self-contained `references/dispatch-and-ledger.md` so it can be installed independently in any harness. See [subagent dispatch and handoff](xu-fr-flow/references/subagent-dispatch.md) for the capability model and non-normative harness mapping examples.
+The FR workflows are capability-driven and harness-agnostic. They use isolated roles, stable context identities (`contextId` + `contextScope`), two-tier read-only isolation, and explicit human gates (`standard` A/B/C or `lite` AB/C).
+Every step resolves to exactly one state: `ADVANCE`, `WAIT_USER`, or `BLOCKED`.
+Routine transitions emit a 6–8 line status card; sparse `flow-ledger` JSON (schema v1) is emitted only for cross-session handoff, ledger validation, or an explicit user request.
+Each standalone loop skill (`xu-design-review-loop`, `xu-dev-review-loop`, `xu-dev-ut-loop`) ships a self-contained `references/dispatch-and-ledger.md`; see [subagent dispatch and handoff](xu-fr-flow/references/subagent-dispatch.md) for the shared capability model.
 
-This repository maintains harness-agnostic workflow skills and does not maintain harness-specific agent profiles; orchestrators bind logical `fr-*` roles dynamically via whatever isolated subagent capability the current harness provides. Standalone HTML flow visuals (such as [xu-dev-review-loop-flow.html](docs/xu-dev-review-loop-flow.html)) live under `docs/` to keep skill packages lightweight.
+This repository does not maintain harness-specific agent profiles or runner scripts; orchestrators bind logical `fr-*` roles through the current harness's isolated subagent capability.
+Standalone HTML flow visuals (such as [xu-dev-review-loop-flow.html](docs/xu-dev-review-loop-flow.html)) live under `docs/` to keep skill packages lightweight.
 
 ## Validation & Scripts
 
@@ -46,13 +52,14 @@ Zero-dependency Node.js tools under `scripts/` enforce ledger gate invariants an
   ```bash
   node scripts/validate-ledger.cjs --gate ut-entry path/to/ledger.json
   ```
-- Check shared governance clauses, relative links, standalone self-containment, and package cleanliness across the four `xu-*` orchestration skills:
+  Add `--pending` when checking an unconfirmed gate-waiting snapshot; the default still requires the target gate to be confirmed.
+- Check governance clauses, terminal states, status-card contract, prose density, relative links, self-containment, and package cleanliness:
   ```bash
   node scripts/check-skills-consistency.cjs
   ```
 - Run the full repository test suite and consistency check:
   ```bash
-  node --test xu-dev-review-loop/workflow.test.cjs scripts/validate-ledger.test.cjs scripts/check-skills-consistency.test.cjs && node scripts/check-skills-consistency.cjs
+  node --test scripts/validate-ledger.test.cjs scripts/check-skills-consistency.test.cjs && node scripts/check-skills-consistency.cjs
   ```
 
 ## Development

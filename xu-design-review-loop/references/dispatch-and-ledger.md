@@ -1,67 +1,66 @@
 # 分派、只读与台账契约（自包含，Harness 无关）
 
-本文件独立定义本技能的能力驱动分派、两级只读隔离与 `flow-ledger` 契约，不依赖外部目录或特定 Harness。
+本文件独立定义能力驱动分派、两级只读隔离与 `flow-ledger` 契约，不依赖外部目录或特定 Harness。
 
 ## 能力驱动独立上下文分派
 
-- **绑定角色**：本技能涉及设计作者 `fr-designer` 与设计 Reviewer `fr-design-reviewer`；单次只读评审仅派 `fr-design-reviewer`。优先使用宿主已配置且合规的专用角色；无专用配置时，使用当前宿主支持创建独立上下文的通用子 Agent 工具并显式指定一个逻辑角色。
-- **上下文身份与句柄分离**：在 `flow-ledger` 中分别记录稳定上下文身份 `contextId`、所属范围 `contextScope`（父会话／Agent 树／运行器实例）及 `runHandle`、`resumeHandle`。同一 `contextScope` 下不同角色不得共用 `contextId`（含 `handoffs[]` 历史身份）。原上下文续接导致 `runHandle` 或 `resumeHandle` 变化时沿用原 `contextId`；换用新的同角色独立上下文时才登记新 `contextId` 并记录交接。
-- **直接履约与禁再委派**：首次分派即提交完整实质任务、版本化输入、允许操作、交付物和完成条件；要求角色子 Agent 直接完成工作，禁止再次委派（宿主支持时关闭其分派权限）。外部人工角色记 `actorType: "external-human"` 与可核对外部身份，不虚构 Agent 会话。
+- **绑定角色**：完整闭环派 `fr-designer` 与 `fr-design-reviewer`；单次只读评审仅派后者。
+  优先使用合规角色配置；无配置时，用通用工具创建独立上下文并指定逻辑角色。
+- **上下文身份与句柄分离**：记录稳定 `contextId`、`contextScope`、`runHandle` 和 `resumeHandle`。
+  同一 `contextScope` 下不同角色不得共用 `contextId`（含 `handoffs[]`）。
+  续接原上下文只更新句柄；换用新的同角色上下文才登记新身份和交接。
+- **直接履约与禁再委派**：首次分派即给出完整任务、版本化输入、权限、交付物和完成条件。
+  角色子 Agent 直接履约，禁止再次委派（宿主支持时关闭其分派权限）。
+  外部人工角色记 `actorType: "external-human"` 与可核对身份，不虚构 Agent 会话。
 
 ## Reviewer 两级只读隔离协议
 
-1. **一级（`enforced`，默认必需）**：使用宿主原生只读工具集、只读沙箱或隔离的只读快照／副本强制限制写入，同时允许读取判断所需上下文。仅用口头“不要写入”或切目录不构成只读隔离。
-2. **二级（`verified-zero-write`，仅显式批准后降级）**：当宿主能新建独立上下文但无法强制禁写时，主 Agent 须先停止正式评审并向用户报告只读能力缺口，禁止直接用口头约束放行。仅当用户获知缺口后明确批准事后零写入核验降级，主 Agent 方可在派工前后采集可核验的工作区／VCS 状态指纹（如 `git status --porcelain` + 差异摘要，或 `svn status` + 校验和），确认 `beforeFingerprint === afterFingerprint` 零写入，并在台账与结论中标明 `readOnlyMode: "verified-zero-write"`、`approvalRef` 与前后指纹；一旦检出任何非预期写入，立即作废评审结论并报告阻塞。
+1. **一级（`enforced`，默认必需）**：用宿主只读工具、只读沙箱或隔离只读副本限制写入。
+   口头“不要写入”或仅切目录不构成只读隔离。
+2. **二级（`verified-zero-write`，仅显式批准后降级）**：无法强制禁写时，先停报缺口；
+   用户获知缺口并明确批准后，才可继续派工。派工前后采集可核验的工作区／VCS 指纹，
+   确认 `beforeFingerprint === afterFingerprint`，并在台账与结论中标注模式、批准记录和指纹。
+   检出任何非预期写入或漂移时，立即作废评审结论并报告阻塞。
 
-## 统一结构化台账（`flow-ledger`，`schemaVersion: 1`）
+## 状态卡与按需台账
 
-在评审轮次切换、停止等待和交付末尾于对话中输出精简 `flow-ledger` JSON 块；仅当用户明确给出保存路径并授权写入时才落盘。独立调用本技能时可置 `meta.standalone: true` 并只填写适用字段，编入 `xu-fr-flow` 时合并至主台账。
+日常切换和交付末尾输出 6–8 行紧凑状态卡，记录档位、阶段／终态、固定版本、
+活跃角色、只读约束、门禁、轮次／回流、阻塞／待确认项。
+跨会话交接、调用 `scripts/validate-ledger.cjs` 或用户明确要求时，
+才输出稀疏 `flow-ledger` JSON（`schemaVersion: 1`），省略未激活角色和未触达门禁。
+独立调用可置 `meta.standalone: true` 并只填写适用字段，编入 `xu-fr-flow` 时合并至主台账。
+仅当用户明确给出保存路径并授权写入时才落盘。
 
 ```json
 {
-  "meta": {
-    "schemaVersion": 1,
-    "standalone": true,
-    "taskId": "DESIGN-YYYY-NNN",
-    "mode": "standard",
-    "preDraftCases": false,
-    "updatedAt": "2026-11-24T16:00:00+08:00"
-  },
-  "versions": {
-    "requirements": "req-v1",
-    "design": "design-v1"
-  },
+  "meta": { "schemaVersion": 1, "standalone": true, "taskId": "DESIGN-2026-001", "mode": "standard", "preDraftCases": false, "updatedAt": "2026-11-24T16:00:00+08:00" },
+  "versions": { "requirements": "req-v1", "design": "design-v1" },
   "roles": {
+    "fr-requirements": {
+      "status": "completed",
+      "contextId": "ctx-req-1",
+      "contextScope": "root-tree-01",
+      "runHandle": "run-req-1",
+      "readOnlyMode": "enforced"
+    },
     "fr-designer": {
       "status": "completed",
-      "actorType": "agent",
-      "harness": "generic",
       "contextId": "ctx-design-1",
       "contextScope": "root-tree-01",
-      "runHandle": "run-d1",
-      "resumeHandle": "resume-d1",
-      "readOnlyMode": "na",
-      "readOnlyEvidence": null,
-      "handoffs": []
+      "runHandle": "run-d1"
     },
     "fr-design-reviewer": {
       "status": "completed",
-      "actorType": "agent",
-      "harness": "generic",
       "contextId": "ctx-design-rev-1",
       "contextScope": "root-tree-01",
       "runHandle": "run-dr1",
-      "resumeHandle": "resume-dr1",
-      "readOnlyMode": "enforced",
-      "readOnlyEvidence": null,
-      "handoffs": []
+      "readOnlyMode": "enforced"
     }
   },
   "gates": {
-    "B": { "status": "pending", "targetVersion": "design-v1", "confirmedBy": null, "evidence": null, "implementationAuthorized": false }
+    "A": { "status": "confirmed", "targetVersion": "req-v1", "confirmedBy": "user", "evidence": "chat-turn-2" },
+    "B": { "status": "pending", "targetVersion": "design-v1", "confirmedBy": null, "evidence": null, "implementationAuthorized": true }
   },
-  "loops": {
-    "design": { "validRounds": 1, "maxRounds": 3, "stagnationCount": 0, "openBlockers": [] }
-  }
+  "loops": { "design": { "validRounds": 1, "maxRounds": 3, "stagnationCount": 0, "openBlockers": [] } }
 }
 ```

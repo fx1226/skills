@@ -6,6 +6,13 @@ const { execFileSync } = require("node:child_process");
 const path = require("node:path");
 const { validateLedger } = require("./validate-ledger.cjs");
 
+function readEmbeddedJson(relativePath) {
+  const content = require("node:fs").readFileSync(path.resolve(__dirname, "..", relativePath), "utf8");
+  const match = content.match(/```json\n([\s\S]*?)\n```/);
+  assert.ok(match, `${relativePath} must contain a JSON example`);
+  return JSON.parse(match[1]);
+}
+
 function makeRole(overrides = {}) {
   return {
     status: "completed",
@@ -125,6 +132,93 @@ test("合法 lite 全流程台账通过 AB、ut-entry、C 与 qa-handoff，且�
   const gateBResult = validateLedger(ledger, { gate: "B" });
   assert.equal(gateBResult.ok, false);
   assert.ok(gateBResult.errors.some((item) => item.code === "GATE_INVALID_FOR_MODE"));
+});
+
+test("最小稀疏 JSON 省略未激活角色、门禁和空环后仍通过各门禁", () => {
+  const sparse = makeStandardLedger();
+  for (const key of ["actorType", "harness", "resumeHandle", "readOnlyEvidence", "handoffs"]) {
+    for (const role of Object.values(sparse.roles)) {
+      delete role[key];
+    }
+  }
+  delete sparse.gates.AB;
+  delete sparse.loops.defectReturn;
+
+  for (const gate of ["A", "B", "ut-entry", "C", "qa-handoff"]) {
+    const result = validateLedger(sparse, { gate });
+    assert.equal(result.ok, true, `sparse gate ${gate} failed: ${JSON.stringify(result.errors)}`);
+  }
+
+  const sparseLite = makeLiteLedger();
+  for (const key of ["actorType", "harness", "resumeHandle", "readOnlyEvidence", "handoffs"]) {
+    for (const role of Object.values(sparseLite.roles)) {
+      delete role[key];
+    }
+  }
+  delete sparseLite.gates.A;
+  delete sparseLite.gates.B;
+  delete sparseLite.loops.defectReturn;
+  assert.equal(validateLedger(sparseLite, { gate: "AB" }).ok, true);
+});
+
+test("参考文档中的最小充分 JSON 样例通过对应门禁", () => {
+  const examples = [
+    ["xu-fr-flow/references/requirements-and-stages.md", "A", false],
+    ["xu-design-review-loop/references/dispatch-and-ledger.md", "B", true, false],
+    ["xu-dev-review-loop/references/dispatch-and-ledger.md", "ut-entry", true],
+    ["xu-dev-ut-loop/references/dispatch-and-ledger.md", "qa-handoff", true],
+  ];
+  for (const [relativePath, gate, standalone, requireConfirmed = true] of examples) {
+    const result = validateLedger(readEmbeddedJson(relativePath), { gate, standalone, requireConfirmed });
+    assert.equal(result.ok, true, `${relativePath}: ${JSON.stringify(result.errors)}`);
+  }
+  const pendingDesign = readEmbeddedJson("xu-design-review-loop/references/dispatch-and-ledger.md");
+  assert.equal(validateLedger(pendingDesign, { gate: "B", standalone: true }).ok, false);
+  assert.equal(validateLedger(pendingDesign, { gate: "ut-entry", standalone: true, requireConfirmed: false }).ok, false);
+});
+
+test("pending 模式仅接受等待态，并保留 B/AB 实现授权约束", () => {
+  const pendingDesign = readEmbeddedJson("xu-design-review-loop/references/dispatch-and-ledger.md");
+
+  for (const status of ["confirmed", "waived", "invalidated"]) {
+    const ledger = structuredClone(pendingDesign);
+    ledger.gates.B.status = status;
+    ledger.gates.B.confirmedBy = "user";
+    ledger.gates.B.evidence = "chat-turn-5";
+    ledger.gates.B.implementationAuthorized = true;
+
+    const result = validateLedger(ledger, { gate: "B", standalone: true, requireConfirmed: false });
+    assert.equal(result.ok, false, `${status} must not pass as a pending gate`);
+    assert.ok(result.errors.some((item) => item.code === "GATE_NOT_CONFIRMED"));
+  }
+
+  const unauthorized = structuredClone(pendingDesign);
+  unauthorized.gates.B.implementationAuthorized = false;
+  const result = validateLedger(unauthorized, { gate: "B", standalone: true, requireConfirmed: false });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((item) => item.code === "IMPLEMENTATION_AUTH_MISSING"));
+
+  const authorized = structuredClone(pendingDesign);
+  authorized.gates.B.implementationAuthorized = true;
+  assert.equal(validateLedger(authorized, { gate: "B", standalone: true, requireConfirmed: false }).ok, true);
+
+  const unauthorizedLite = makeLiteLedger();
+  unauthorizedLite.gates.AB.status = "pending";
+  unauthorizedLite.gates.AB.implementationAuthorized = false;
+  const liteResult = validateLedger(unauthorizedLite, { gate: "AB", requireConfirmed: false });
+  assert.equal(liteResult.ok, false);
+  assert.ok(liteResult.errors.some((item) => item.code === "IMPLEMENTATION_AUTH_MISSING"));
+});
+
+test("pending 在 C 上只允许放宽 C 自身，A/B 仍须已确认且已授权", () => {
+  const ledger = makeStandardLedger();
+  ledger.gates.C = { status: "pending", targetVersion: "ut-v1", confirmedBy: null, evidence: null };
+  assert.equal(validateLedger(ledger, { gate: "C", requireConfirmed: false }).ok, true);
+
+  ledger.gates.B.implementationAuthorized = false;
+  const result = validateLedger(ledger, { gate: "C", requireConfirmed: false });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((item) => item.code === "IMPLEMENTATION_AUTH_MISSING"));
 });
 
 test("lite 模式触发任一红线即被拦截", () => {
@@ -355,4 +449,10 @@ test("CLI 模式支持 stdin 输入并返回正确退出码", () => {
   }
   assert.equal(exitCode, 1);
   assert.equal(JSON.parse(stdoutText).ok, false);
+
+  const pendingOutput = execFileSync(process.execPath, [scriptPath, "--gate", "B", "--standalone", "--pending", "-"], {
+    input: JSON.stringify(readEmbeddedJson("xu-design-review-loop/references/dispatch-and-ledger.md")),
+    encoding: "utf8",
+  });
+  assert.equal(JSON.parse(pendingOutput).ok, true);
 });

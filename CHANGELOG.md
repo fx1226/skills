@@ -2,6 +2,11 @@
 
 ## Unreleased
 
+- Refactor the four orchestration skills into compact entry/role/flow/exception/state skeletons, enforce 220-character prose limits, and preserve the existing role-isolation, two-tier read-only, full-round UT, and circuit-breaker semantics.
+- Switch routine ledger reporting to 6–8 line status cards; emit sparse `flow-ledger` JSON only for handoff, validation, or explicit request, with schema v1 compatibility and executable minimal examples.
+- Add `requireConfirmed: false` / `--pending` to validate unconfirmed gate-waiting snapshots without weakening the default confirmed-gate requirement.
+- Remove the harness-specific `workflow.js` runner and its five dedicated scenarios, remove legacy `.opencode/` profiles and harness documentation bindings, and align behavioral prompts with the generic capability model.
+- Extend `check-skills-consistency.cjs` with terminal-state, status-card, prose-density, runner-asset, and harness-binding checks, and add sparse-ledger and documentation-example regression tests.
 - Add explicit `standard` / `lite` delivery modes with five mandatory upgrade redlines and merged Gate AB in `xu-fr-flow`, plus optional explicitly-enabled `preDraftCases` shift-left skeleton drafting that still aligns to the post-review `codeSnapshot` before Gate C.
 - Clarify white-box (`xu-dev-review-loop`) vs black-box (`xu-dev-ut-loop`) testing boundaries, same-snapshot pure automation reuse rules, `maxDefectCycles` (default 2, range 1–10) outer defect-return circuit breaking with decoupled incremental Stage 4 review budgets, and the four-step `affectedScope` handoff chain.
 - Enforce mandatory full-round UT execution on a fixed version: once a UT pass starts, execute and record all confirmed cases (even under high failure/blockage rates) before planning batched bug fixes or missing-feature completions and triggering a single defect-return cycle (`fullRoundCompleted: true`).

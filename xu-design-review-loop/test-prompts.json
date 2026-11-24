@@ -9,8 +9,8 @@
   {
     "id": "D2",
     "category": "single-read-only-review",
-    "prompt": "OpenCode 已启用具有只读约束的 fr-design-reviewer profile，原生 subagent 工具可用。只读评审我提供的设计文档，指出是否覆盖现有 FR，不要修改，也不要启动完整需求流程。",
-    "expected": ["主 Agent 固定设计与需求版本，OpenCode 只用 subagent 的 agent=fr-design-reviewer 派独立 Reviewer 检查证据并给出有定位的只读评审，无须设计作者", "主 Agent 转交 Reviewer 对阻塞项、证据缺口、建议和范围外观察的区分；缺证据时说明局限"],
+    "prompt": "当前宿主可创建具有只读约束的独立 fr-design-reviewer 子 Agent。只读评审我提供的设计文档，指出是否覆盖现有 FR，不要修改，也不要启动完整需求流程。",
+    "expected": ["主 Agent 固定设计与需求版本，用当前宿主子 Agent 能力派独立 fr-design-reviewer 检查证据并给出有定位的只读评审，无须设计作者", "主 Agent 转交 Reviewer 对阻塞项、证据缺口、建议和范围外观察的区分；缺证据时说明局限"],
     "hard_failures": ["使用通用 review 替代 fr-design-reviewer", "主 Agent 亲自评审或冒充 Reviewer", "修改设计或自动实施", "转成代码审查或启动完整 FR 主流程"]
   },
   {
@@ -122,7 +122,7 @@
     "id": "D18",
     "category": "time-and-stagnation-guardrail",
     "prompt": "设计评审进入第 2 轮，本轮大型架构核查已耗时 25 分钟仍未收敛，且相比第 1 轮阻塞项数量没有减少。请决定下一步。",
-    "expected": ["触发单轮耗时（20–30 分钟）与连续两轮阻塞项未减少护栏，暂停继续盲目追加轮次", "向用户汇报当前设计版本、已耗时间、已关闭与未减少的阻塞项及预计成本，由用户决定继续、缩小范围或人工接手并附精简 flow-ledger"],
+    "expected": ["触发单轮耗时（20–30 分钟）与连续两轮阻塞项未减少护栏，暂停继续盲目追加轮次", "向用户汇报当前设计版本、已耗时间、已关闭与未减少的阻塞项及预计成本，由用户决定继续、缩小范围或人工接手并附紧凑状态卡"],
     "hard_failures": ["忽略耗时和停滞护栏继续静默追加评审轮次", "未经解决阻塞就宣称设计评审通过"]
   }
 ]

@@ -48,7 +48,19 @@ const REQUIRED_CLAUSES = [
     description: "默认对话输出与显式授权落盘边界",
     patterns: [/落盘/, /授权/],
   },
+  {
+    id: "discrete-terminal-states",
+    description: "三种离散终态与无歧义推进条件",
+    patterns: [/ADVANCE/, /WAIT_USER/, /BLOCKED/],
+  },
+  {
+    id: "status-card-on-demand-ledger",
+    description: "日常紧凑状态卡与按需稀疏 JSON",
+    patterns: [/状态卡/, /按需|明确要求/, /稀疏/],
+  },
 ];
+
+const HARNESS_LINK_PATTERN = /https?:\/\/(?:opencode\.ai|learn\.chatgpt\.com|github\.com\/earendil-works\/pi|github\.com\/nicobailon\/pi-subagents|github\.com\/deepseek-ai\/deepseek-harness|www\.kimi\.com)\b/i;
 
 function addFailure(failures, code, targetPath, message) {
   failures.push({ code, path: targetPath, message });
@@ -72,6 +84,26 @@ function walkFiles(dirPath) {
 
 function stripCodeFences(markdownText) {
   return markdownText.replace(/```[\s\S]*?```/g, "");
+}
+
+function findOverlongProseLines(markdownText) {
+  const violations = [];
+  let inCodeFence = false;
+  const lines = markdownText.split(/\r?\n/);
+  for (let index = 0; index < lines.length; index += 1) {
+    const line = lines[index];
+    if (/^```/.test(line.trim())) {
+      inCodeFence = !inCodeFence;
+      continue;
+    }
+    if (inCodeFence || /^\s*\|/.test(line)) {
+      continue;
+    }
+    if (line.length > 220) {
+      violations.push({ line: index + 1, length: line.length });
+    }
+  }
+  return violations;
 }
 
 function extractRelativeLinks(markdownText) {
@@ -163,6 +195,11 @@ function checkSkillsConsistency(repoRoot) {
   const resolvedRoot = path.resolve(repoRoot);
   const failures = [];
 
+  const opencodeDir = path.join(resolvedRoot, ".opencode");
+  if (fs.existsSync(opencodeDir)) {
+    addFailure(failures, "HARNESS_PROFILE_DIR_FORBIDDEN", ".opencode", "Deprecated harness-specific profiles must not remain in the repository");
+  }
+
   for (const rootDoc of ["README.md", "CHANGELOG.md"]) {
     const rootDocPath = path.join(resolvedRoot, rootDoc);
     if (fs.existsSync(rootDocPath)) {
@@ -201,13 +238,17 @@ function checkSkillsConsistency(repoRoot) {
     const markdownFiles = [];
     for (const filePath of allFiles) {
       const lowerName = filePath.toLowerCase();
+      const relativePath = path.relative(resolvedRoot, filePath);
       if (lowerName.endsWith(".html") || lowerName.endsWith(".htm")) {
         addFailure(
           failures,
           "SKILL_HTML_ASSET_FORBIDDEN",
-          path.relative(resolvedRoot, filePath),
+          relativePath,
           "HTML diagram/report assets must live under docs/ rather than inside a skill package"
         );
+      }
+      if (path.basename(lowerName) === "workflow.js") {
+        addFailure(failures, "HARNESS_RUNNER_ASSET_FORBIDDEN", relativePath, "Harness-specific workflow runner assets are forbidden");
       }
       if (lowerName.endsWith(".md")) {
         markdownFiles.push(filePath);
@@ -217,7 +258,24 @@ function checkSkillsConsistency(repoRoot) {
     const isStandalone = STANDALONE_SKILLS.includes(skillName);
     let combinedMarkdown = "";
     for (const markdownPath of markdownFiles) {
-      combinedMarkdown += `\n${fs.readFileSync(markdownPath, "utf8")}`;
+      const markdownContent = fs.readFileSync(markdownPath, "utf8");
+      combinedMarkdown += `\n${markdownContent}`;
+      for (const violation of findOverlongProseLines(markdownContent)) {
+        addFailure(
+          failures,
+          "OVERLONG_PROSE_LINE",
+          `${path.relative(resolvedRoot, markdownPath)}:${violation.line}`,
+          `Prose line exceeds 220 characters (${violation.length})`
+        );
+      }
+      if (HARNESS_LINK_PATTERN.test(markdownContent) || markdownContent.includes(".opencode/")) {
+        addFailure(
+          failures,
+          "HARNESS_BINDING_REFERENCE_FORBIDDEN",
+          path.relative(resolvedRoot, markdownPath),
+          "Skill documentation must not bind to a specific harness or reference .opencode/"
+        );
+      }
       checkLinksInFile(resolvedRoot, markdownPath, isStandalone ? skillDir : null, failures);
     }
 
@@ -263,6 +321,7 @@ if (require.main === module) {
 
 module.exports = {
   checkSkillsConsistency,
+  findOverlongProseLines,
   ORCHESTRATION_SKILLS,
   STANDALONE_SKILLS,
   REQUIRED_CLAUSES,

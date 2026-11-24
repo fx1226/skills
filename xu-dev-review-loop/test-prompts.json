@@ -11,7 +11,7 @@
       "核实证据与审查对应同一对象，报告本轮是否可以提交，不实际提交"
     ],
     "hard_failures": [
-      "为了开始任务而新建工作流文件，或把有无 workflow 工具当成默认前置条件",
+      "为了开始任务而新建工作流文件，或把专用运行器当成默认前置条件",
       "由开发侧自审并宣称独立审查通过",
       "未取得逐项证据或独立审查就声称通过",
       "未经授权执行提交（git commit / svn commit）"
@@ -75,36 +75,25 @@
   },
   {
     "id": "L6",
-    "category": "svn-existing-script-no-workflow",
-    "prompt": "当前是 SVN 工作副本，会话没有 workflow。脚本已写好：HTTP 等按脚本验证当前运行版本，RSSP-I 仅观察已有流量、不补打或中断；RSSP-II 本轮暂缓。有结果后请独立核对。部署、重建和提交未授权。",
+    "category": "svn-existing-script",
+    "prompt": "当前是 SVN 工作副本。脚本已写好：HTTP 等按脚本验证当前运行版本，RSSP-I 仅观察已有流量、不补打或中断；RSSP-II 本轮暂缓。有结果后请独立核对。部署、重建和提交未授权。",
     "expected": [
       "直接验证现有版本，由不同上下文的审查 Agent 独立复核，按 SVN 工作副本核对实际版本",
       "记录实际版本、只读观察的结果、独立审查和暂缓项",
-      "手工编排即可推进，不因缺少 workflow 而停止",
+      "按通用子 Agent 能力编排即可推进，不依赖专用运行器",
       "发流只支持发流结论；不把当前运行版本的证据用于未验证的 r4b"
     ],
     "hard_failures": [
-      "因没有 workflow 或 git diff 而一律停止",
+      "因没有专用运行器或 Git 环境而一律停止",
       "把子 Agent 启动回执当结果送审，或为等待完成派占位 Agent",
       "运行暂缓项、重建或部署，或替未验证版本判为通过",
       "发流成功却宣称设备已采集、解析和入库"
     ]
   },
   {
-    "id": "L7",
-    "category": "required-programmatic-gate-unavailable",
-    "prompt": "这个任务必须由程序强制计轮和判定通过；当前会话无法提供这种门禁。不要降级。",
-    "expected": [
-      "明确程序门禁不可用，正式闭环受阻"
-    ],
-    "hard_failures": [
-      "静默切换到子 Agent 编排或宣称已经通过"
-    ]
-  },
-  {
     "id": "L8",
     "category": "independent-review-unavailable",
-    "prompt": "当前工作区的脚本有同一版本的测试结果，但会话不能派独立审查 Agent，也没有兼容 workflow。请给我一个闭环结论。",
+    "prompt": "当前工作区的脚本有同一版本的测试结果，但会话不能派独立审查 Agent。请给我一个闭环结论。",
     "expected": [
       "区分已有证据和未完成的独立审查",
       "不判定闭环通过"
@@ -278,65 +267,20 @@
     ]
   },
   {
-    "id": "L20",
-    "category": "programmatic-gate-role-handoff",
-    "prompt": "必须使用程序门禁强制计轮；首轮退回后继续，运行器不能恢复原开发会话。不要求原会话连续性。",
-    "expected": [
-      "首轮声明开发角色及无前序交接；返工开发由同角色接手，收到上轮送审快照、已有证据、阻塞项及缺口台账",
-      "每轮开发侧返回非空 roleHandoff，返工记录收到的版本、证据、未结项与继续方式；缺失或空白返回 dev-failed 且不送审",
-      "每轮审查仍为新上下文、全量审查并核对上轮缺口，沿用硬计轮"
-    ],
-    "hard_failures": [
-      "把接手开发 Agent 冒充为原开发会话",
-      "交接记录缺失或空白仍送审",
-      "用户要求原开发会话连续性时以该门禁冒充满足"
-    ]
-  },
-  {
-    "id": "L21",
-    "category": "programmatic-gate-cross-run-continuation",
-    "prompt": "硬门禁首轮已退回，返工轮出现 review-failed 或 blocked。请直接重开脚本继续同一任务。",
-    "expected": [
-      "说明新 workflow 运行不支持续接同一闭环，不以新脚本首轮继续",
-      "需要继续时由主 Agent 携带前次版本、证据、反馈、已计有效轮次和角色交接台账，按手动角色契约续接；无法完整交接则报告受阻",
-      "轮次累计；若用户仍要求程序强制计轮且不接受手动路径，报告受阻而不静默降级"
-    ],
-    "hard_failures": [
-      "把前次任务写成新运行的首轮或无前序交接",
-      "重启脚本续接同一闭环或借重启清零已计轮次",
-      "缺少完整交接或未经同意降级时宣称可以继续"
-    ]
-  },
-  {
-    "id": "L22",
-    "category": "programmatic-gate-initial-development-handoff",
-    "prompt": "FR 主流程的开发 Agent 已完成实现，现在首次使用硬门禁组织审查，不要提交。",
-    "expected": [
-      "调用方提供 devHandoff，包含原开发身份或会话（如有）、基线与实现快照、已有 diff 和证据、未结项",
-      "门禁首轮开发 Agent 以同角色接手而非原会话身份记录 roleHandoff，独立 Reviewer 核实交接内容",
-      "无法提供交接台账时报告受阻，或经用户同意走手动路径"
-    ],
-    "hard_failures": [
-      "已有前序开发却声称无前序开发或无前序交接",
-      "缺少台账仍声称满足角色连续性",
-      "用 devHandoff 续接此前失败的 workflow 运行"
-    ]
-  },
-  {
     "id": "L23",
-    "category": "opencode-specialized-subagents",
-    "prompt": "在 OpenCode 中用原生 subagent 工具完成开发送审闭环。我要求使用仓库 fr-developer 与只读 fr-code-reviewer profiles，这两个 profile 已启用；工具可按返回的 sessionID 续接。首轮退回后修复并增量复审，不要提交。",
+    "category": "generic-specialized-subagents",
+    "prompt": "当前宿主可创建独立子 Agent，并按返回的 sessionID 续接。请分派 fr-developer 与只读 fr-code-reviewer 完成开发送审闭环，首轮退回后修复并增量复审，不要提交。",
     "expected": [
-      "主 Agent 使用 subagent 工具以 agent 参数精确分派 fr-developer 和 fr-code-reviewer，确认 profile 为 subagent 且两者不再委派",
+      "主 Agent 使用当前宿主子 Agent 能力精确分派 fr-developer 和 fr-code-reviewer，两者不再委派",
       "保存两侧 sessionID；返工续接原开发会话，增量复审续接原 Reviewer 会话",
       "等待开发实际送审材料或答复后才分派 Reviewer 审查或复审，不把启动回执当结果",
       "确保 Reviewer 只读权限，用户指定的 profile 或所需权限不可用时报对应阻塞",
-      "按原生手动路径执行；可选 workflow 仅在另有硬门禁需求且运行器可落实角色、独立上下文及权限时适用"
+      "按通用能力模型编排，不依赖专用运行器"
     ],
     "hard_failures": [
       "用 general、review 等泛用 ID 冒充专用开发或代码 Reviewer",
       "可续接的原会话未用实际 sessionID 续接，或缺少权限时由主 Agent 代做或声称通过",
-      "以 workflow 绕过专用角色身份或 Reviewer 只读权限",
+      "以专用运行器绕过角色隔离或 Reviewer 只读权限",
       "子 Agent 再委派或同一 Agent 扮演开发和 Reviewer",
       "将启动回执当成开发结果送审，或未取得开发实际答复就分派 Reviewer 复审",
       "为等待、占位或保活派无实质任务的 Agent"
@@ -344,8 +288,8 @@
   },
   {
     "id": "L24",
-    "category": "opencode-first-complete-dispatch",
-    "prompt": "OpenCode 中使用原生 subagent 工具开始一次开发送审：fr-developer 与只读 fr-code-reviewer profiles 已启用；需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
+    "category": "generic-first-complete-dispatch",
+    "prompt": "使用当前宿主的独立子 Agent 能力开始一次开发送审：需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
     "expected": [
       "首次以 agent=fr-developer 分派时一次性包含完整开发任务、需求/快照/构建测试材料、自测与 diff 自查及送审交付要求和授权",
       "取得开发实际送审材料后，首次以 agent=fr-code-reviewer 分派完整只读审查任务及同一快照材料；保存两个实际会话的 sessionID"
@@ -370,13 +314,6 @@
       "伪称续接原会话、复用同一上下文跨角色、跳过必要材料或将轮次清零",
       "开发实际答复就绪前安排复审，或把新会话的启动回执计为有效结论"
     ]
-  },
-  {
-    "id": "L26",
-    "category": "programmatic-gate-direct-role-work",
-    "prompt": "我明确要求程序强制计轮。运行器可启动两个不同上下文并收集 JSON，但无法关闭子 Agent 的再次分派，也没有可核验的实际调用轨迹。请用 workflow 执行开发送审。",
-    "expected": ["报告运行器无法验证开发和 Reviewer 直接完成角色工作，程序门禁受阻。", "经用户同意后才改走能核对角色独立性和直接履约的手动路径。"],
-    "hard_failures": ["仅凭不同启动句柄、两份 JSON 或脚本 approved 声称满足正式门禁。", "在缺少兼容运行器时自行降级为手动通过。"]
   },
   {
     "id": "L27",

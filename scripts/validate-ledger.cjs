@@ -505,8 +505,20 @@ function requireConfirmedGate(gates, gateName, expectedVersion, errors, options 
     addError(errors, "GATE_STATUS_INVALID", `${basePath}.status`, `Gate "${gateName}" has invalid status "${String(gateRecord.status)}"`);
     return;
   }
-  if (gateRecord.status !== "confirmed") {
-    addError(errors, "GATE_NOT_CONFIRMED", `${basePath}.status`, `Gate "${gateName}" must be "confirmed" (got "${gateRecord.status}")`);
+  const requiredStatus = options.requireConfirmed === false ? "pending" : "confirmed";
+  if (gateRecord.status !== requiredStatus) {
+    addError(errors, "GATE_NOT_CONFIRMED", `${basePath}.status`, `Gate "${gateName}" must be "${requiredStatus}" (got "${gateRecord.status}")`);
+    return;
+  }
+  if (options.requireConfirmed === false && gateRecord.targetVersion === expectedVersion) {
+    if (options.requireImplAuth && gateRecord.implementationAuthorized !== true) {
+      addError(
+        errors,
+        "IMPLEMENTATION_AUTH_MISSING",
+        `${basePath}.implementationAuthorized`,
+        `Gate "${gateName}" requires explicit implementationAuthorized: true before coding`
+      );
+    }
     return;
   }
   if (!isNonEmptyString(gateRecord.targetVersion) || gateRecord.targetVersion !== expectedVersion) {
@@ -542,7 +554,7 @@ function checkGateA(ledger, context, errors) {
     addError(errors, "VERSION_REQUIREMENTS_MISSING", "versions.requirements", "versions.requirements must be non-empty for gate A");
   }
   requireRoleCompleted(context.roles, "fr-requirements", errors);
-  requireConfirmedGate(ledger.gates, "A", context.versions.requirements, errors);
+  requireConfirmedGate(ledger.gates, "A", context.versions.requirements, errors, context.gateOptions);
 }
 
 function checkGateAB(ledger, context, errors) {
@@ -554,7 +566,7 @@ function checkGateAB(ledger, context, errors) {
     addError(errors, "VERSION_REQUIREMENTS_MISSING", "versions.requirements", "versions.requirements must be non-empty for gate AB");
   }
   requireRoleCompleted(context.roles, "fr-requirements", errors);
-  requireConfirmedGate(ledger.gates, "AB", context.versions.requirements, errors, { requireImplAuth: true });
+  requireConfirmedGate(ledger.gates, "AB", context.versions.requirements, errors, { ...context.gateOptions, requireImplAuth: true });
 }
 
 function checkGateB(ledger, context, errors) {
@@ -562,7 +574,10 @@ function checkGateB(ledger, context, errors) {
     addError(errors, "GATE_INVALID_FOR_MODE", "gates.B", 'Gate "B" is waived in lite mode; validate gate "AB" instead');
     return;
   }
-  checkGateA(ledger, context, errors);
+  checkGateA(ledger, {
+    ...context,
+    gateOptions: { ...context.gateOptions, requireConfirmed: true },
+  }, errors);
   if (!isNonEmptyString(context.versions.design)) {
     addError(errors, "VERSION_DESIGN_MISSING", "versions.design", "versions.design must be non-empty for gate B");
   }
@@ -576,7 +591,7 @@ function checkGateB(ledger, context, errors) {
     addError(errors, "DESIGN_BLOCKERS_OPEN", "loops.design.openBlockers", "Gate B cannot pass while design openBlockers is non-empty");
   }
 
-  requireConfirmedGate(ledger.gates, "B", context.versions.design, errors, { requireImplAuth: true });
+  requireConfirmedGate(ledger.gates, "B", context.versions.design, errors, { ...context.gateOptions, requireImplAuth: true });
 }
 
 function checkUtEntry(ledger, context, errors) {
@@ -659,7 +674,10 @@ function checkUtEntry(ledger, context, errors) {
 }
 
 function checkGateC(ledger, context, errors) {
-  checkUtEntry(ledger, context, errors);
+  checkUtEntry(ledger, {
+    ...context,
+    gateOptions: { ...context.gateOptions, requireConfirmed: true },
+  }, errors);
 
   if (!isNonEmptyString(context.versions.testCases)) {
     addError(errors, "VERSION_TEST_CASES_MISSING", "versions.testCases", "versions.testCases must be non-empty for gate C");
@@ -682,7 +700,7 @@ function checkGateC(ledger, context, errors) {
     addError(errors, "TEST_CASE_BLOCKERS_OPEN", "loops.testCase.openBlockers", "Gate C cannot pass while testCase openBlockers is non-empty");
   }
 
-  requireConfirmedGate(ledger.gates, "C", context.versions.testCases, errors);
+  requireConfirmedGate(ledger.gates, "C", context.versions.testCases, errors, context.gateOptions);
 }
 
 function checkQaHandoff(ledger, context, errors) {
@@ -769,6 +787,10 @@ function validateLedger(ledger, options = {}) {
     addError(errors, "INVALID_TARGET_GATE", "gate", `Target gate must be one of: ${VALID_GATES.join(", ")}`);
     return { ok: false, gate: gate ?? null, errors, warnings };
   }
+  if (options.requireConfirmed === false && !["A", "B", "AB", "C"].includes(gate)) {
+    addError(errors, "PENDING_OPTION_UNSUPPORTED", "requireConfirmed", "Pending snapshots are only supported for gates A, B, AB, and C");
+    return { ok: false, gate, errors, warnings };
+  }
   if (!isPlainObject(ledger)) {
     addError(errors, "LEDGER_INVALID", "$", "Ledger payload must be a JSON object");
     return { ok: false, gate, errors, warnings };
@@ -784,6 +806,7 @@ function validateLedger(ledger, options = {}) {
     versions,
     roles,
     loops,
+    gateOptions: { requireConfirmed: options.requireConfirmed !== false },
   };
 
   if (gate === "A") {
@@ -806,6 +829,7 @@ function validateLedger(ledger, options = {}) {
 function parseCliArgs(argv) {
   let gate = null;
   let standalone = false;
+  let requireConfirmed = true;
   let inputPath = null;
 
   for (let index = 0; index < argv.length; index += 1) {
@@ -817,6 +841,8 @@ function parseCliArgs(argv) {
       gate = token.slice("--gate=".length);
     } else if (token === "--standalone") {
       standalone = true;
+    } else if (token === "--pending") {
+      requireConfirmed = false;
     } else if (token === "--help" || token === "-h") {
       return { help: true };
     } else if (!inputPath) {
@@ -827,15 +853,15 @@ function parseCliArgs(argv) {
   }
 
   if (!gate || !inputPath) {
-    return { error: "Usage: node scripts/validate-ledger.cjs --gate <A|B|AB|C|ut-entry|qa-handoff> <ledger.json | -> [--standalone]" };
+    return { error: "Usage: node scripts/validate-ledger.cjs --gate <A|B|AB|C|ut-entry|qa-handoff> <ledger.json | -> [--standalone] [--pending]" };
   }
-  return { gate, standalone, inputPath };
+  return { gate, standalone, requireConfirmed, inputPath };
 }
 
 function runCli(argv) {
   const parsed = parseCliArgs(argv);
   if (parsed.help) {
-    console.log("Usage: node scripts/validate-ledger.cjs --gate <A|B|AB|C|ut-entry|qa-handoff> <ledger.json | -> [--standalone]");
+    console.log("Usage: node scripts/validate-ledger.cjs --gate <A|B|AB|C|ut-entry|qa-handoff> <ledger.json | -> [--standalone] [--pending]");
     process.exit(0);
   }
   if (parsed.error) {
@@ -859,7 +885,11 @@ function runCli(argv) {
     process.exit(2);
   }
 
-  const result = validateLedger(ledger, { gate: parsed.gate, standalone: parsed.standalone });
+  const result = validateLedger(ledger, {
+    gate: parsed.gate,
+    standalone: parsed.standalone,
+    requireConfirmed: parsed.requireConfirmed,
+  });
   console.log(JSON.stringify(result, null, 2));
   process.exit(result.ok ? 0 : 1);
 }
