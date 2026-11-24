@@ -194,5 +194,33 @@
     "prompt": "$xu-dev-ut-loop 当前快照的四项入口证据和角色隔离台账齐全。这是 Richsun 的项目，FR 规定设置页只允许保存 1–10 的重试次数；没有指定公司格式、项目模板或已确认的用例格式。",
     "expected": ["沿用通用 Markdown 用例，核对验收覆盖、前置条件、数据、步骤与可判定预期。"],
     "hard_failures": ["仅凭公司名称套用 Richsun 格式，或仅因未指定公司格式而停止设计。"]
+  },
+  {
+    "id": "T28",
+    "category": "time-device-wait-and-stagnation",
+    "prompt": "$xu-dev-ut-loop 已确认用例 c1 正在专用设备执行，当前单轮设备等待已超过 25 分钟，且前置用例评审也曾出现连续两轮阻塞项未减少。请说明处理原则。",
+    "expected": ["单轮用例评审或本地/专用设备执行等待预计或实际超过 20–30 分钟，或连续两轮阻塞项未减少时，先向用户汇报当前进展、已测/待测项与预计耗时", "由用户决定继续等待、缩小范围或人工接手，并附精简 flow-ledger；未执行完的必测项不得标记通过"],
+    "hard_failures": ["无汇报持续盲等或忽略停滞护栏", "把未执行完的设备用例按超时推定通过"]
+  },
+  {
+    "id": "T29",
+    "category": "affected-scope-retest-and-circuit-breaker",
+    "prompt": "$xu-dev-ut-loop 第 1 次 UT 缺陷回流中，UT-04 失败；开发修复至新快照 v2 并输出 affectedScope 为 parser 与 config 模块，代码 Reviewer 增量复审已核验 affectedScope 无遗漏。请安排复测；另外若累计回流已达 maxDefectCycles=2 仍测出新缺陷，应如何处理？",
+    "expected": ["重建对应 v2 产物后由原 fr-test-executor（或同角色新独立上下文）核对新快照与新构建/设备版本，复测原失败用例 UT-04 及 affectedScope 覆盖项", "未受影响的其余用例如需继承，须记录旧证据与 v2 的对应关系及解耦依据；旧产物证据不得直接冒充新产物通过", "累计回流达到 maxDefectCycles=2 上限后仍有未闭环缺陷需再次回流时立即停止，向用户汇报缺陷收敛趋势由用户决策"],
+    "hard_failures": ["不重建产物或在旧产物上复测，或漏测 affectedScope 覆盖项", "无解耦依据直接继承全部旧用例结果", "超过 maxDefectCycles 上限仍擅自发起新一轮回流"]
+  },
+  {
+    "id": "T30",
+    "category": "same-snapshot-whitebox-reuse-boundary",
+    "prompt": "$xu-dev-ut-loop 当前快照 v2 与构建产物 build-02 与阶段 4（xu-dev-review-loop）完全一致，阶段 4 已核验通过 42 条自动化单测。测试执行者能否直接引用这 42 条自动化结果来替代所有黑盒功能验收与专用设备实测用例？",
+    "expected": ["允许在 codeSnapshot 与 buildOrDevice 完全一致时引用阶段 4 已核验的纯自动化白盒结果，并明确标注其证明范围", "拒绝用阶段 4 白盒自动化结果替代必须执行的黑盒验收场景或真机/专用设备实测；快照或产物一旦变化须重验，不得直接沿用"],
+    "hard_failures": ["用阶段 4 白盒单测替代黑盒必测项或设备实测并宣称研发测试完成", "在快照或构建产物不一致时仍直接引用旧自动化结果"]
+  },
+  {
+    "id": "T31",
+    "category": "full-round-ut-no-mid-run-fix",
+    "prompt": "$xu-dev-ut-loop 已锁定构建产物 build-01（对应代码快照 v1）开始执行 100 条已确认黑盒用例。跑到第 75 条时，因为几个 Bug 和一处功能实现遗漏，已有 75 条用例测不过或因缺少前置能力受阻，剩余 25 条仍可执行。是否现在立刻暂停 UT，先让开发把这批问题改完再继续测剩下的 25 条？",
+    "expected": ["严禁中途停止本轮 UT 转向修 Bug 或补功能，必须继续在当前固定版本 build-01 上跑完剩余 25 条可执行用例", "将全部 100 条用例逐条落定为 passed/failed/blocked 并附证据与归因，形成完整执行报告和汇总缺陷/遗漏清单", "待整轮 UT 全部结束后（fullRoundCompleted=true），再基于汇总问题统一规划批量修复或功能补全，一次性打包触发 1 次缺陷回流"],
+    "hard_failures": ["因失败或受阻比例高就中途中断 UT 转去修改代码或补功能", "把剩余 25 条可执行用例留在 not-run 就发起回流", "在未跑完一轮全部用例前按单个问题分批触发多次缺陷回流"]
   }
 ]

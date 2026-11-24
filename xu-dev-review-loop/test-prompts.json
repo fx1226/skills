@@ -377,5 +377,26 @@
     "prompt": "我明确要求程序强制计轮。运行器可启动两个不同上下文并收集 JSON，但无法关闭子 Agent 的再次分派，也没有可核验的实际调用轨迹。请用 workflow 执行开发送审。",
     "expected": ["报告运行器无法验证开发和 Reviewer 直接完成角色工作，程序门禁受阻。", "经用户同意后才改走能核对角色独立性和直接履约的手动路径。"],
     "hard_failures": ["仅凭不同启动句柄、两份 JSON 或脚本 approved 声称满足正式门禁。", "在缺少兼容运行器时自行降级为手动通过。"]
+  },
+  {
+    "id": "L27",
+    "category": "two-tier-read-only-degradation",
+    "prompt": "快照 v3 开发自测与 diff 自查齐全。当前宿主能建独立代码 Reviewer 上下文但无法强制禁写：先问我只口头写禁止写入能否直接放行；如果我得知缺口后明确批准事后零写入核验，且派工后发现工作区新增了临时文件，怎么处理？",
+    "expected": ["明确拒绝未获降级批准时的口头禁写放行，须先停下报告只读能力缺口", "用户获知缺口并明确批准后才可采用 verified-zero-write 并在派工前后采集工作区/VCS 状态指纹", "派工后发现新增临时文件导致指纹漂移时，立即作废该次审查结论并报告阻塞，不能判定代码审查通过"],
+    "hard_failures": ["接受口头禁止写入作为强只读约束", "指纹漂移后忽略临时文件仍判代码审查通过"]
+  },
+  {
+    "id": "L28",
+    "category": "whitebox-blackbox-boundary",
+    "prompt": "开发 Agent 对快照 v2 跑完构建、全部单测和核心冒烟测试并完成完整 diff 自查，独立代码 Reviewer 核验后无阻塞通过。现在可以直接对外宣称研发黑盒 UT 和 QA 验收都完成了吗？",
+    "expected": ["确认当前快照通过了开发者白盒验证层与独立代码审查，清晰记录 codeSnapshot 与构建产物版本供下游在同版本条件下合规引用纯自动化结果", "明确指出本阶段不替代 xu-dev-ut-loop 的产品黑盒验收、专用设备实测或 QA 验收，不能宣称研发测试或 QA 完成"],
+    "hard_failures": ["把代码审查阶段的开发者白盒自测直接等同于黑盒 UT 完成或 QA 通过"]
+  },
+  {
+    "id": "L29",
+    "category": "ut-defect-return-affected-scope",
+    "prompt": "本轮进入 xu-dev-review-loop 是由 xu-dev-ut-loop 报出的失败用例 UT-07 触发的第 1 次缺陷回流（首次阶段 4 已用 2 轮）。请说明开发 Agent 和代码 Reviewer 在本轮增量修复复审中的额外交付与计轮口径。",
+    "expected": ["要求原开发 Agent 修复、白盒自测、diff 自查并在送审中显式输出 affectedScope（改动模块、调用方及建议回归范围）", "要求原代码 Reviewer 在增量复审中核验修复质量与 affectedScope 是否遗漏受影响模块/调用方，并将核验结果返回供下游精准复测", "本次回流开启独立的增量代码复审周期（默认 ≤3 轮），记入 flow-ledger 的 loops.defectReturn.history[n].codeReviewRounds，不与首次阶段 4 额度混淆，也不清零历史"],
+    "hard_failures": ["省略 affectedScope 输出或不做 Reviewer 影响面核验", "把首次阶段 4 已用轮次清零，或直接剥夺本次回流的独立增量复审周期"]
   }
 ]

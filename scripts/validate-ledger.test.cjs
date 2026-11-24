@@ -1,0 +1,358 @@
+"use strict";
+
+const test = require("node:test");
+const assert = require("node:assert/strict");
+const { execFileSync } = require("node:child_process");
+const path = require("node:path");
+const { validateLedger } = require("./validate-ledger.cjs");
+
+function makeRole(overrides = {}) {
+  return {
+    status: "completed",
+    actorType: "agent",
+    harness: "generic",
+    contextId: "ctx-default",
+    contextScope: "root-tree-01",
+    runHandle: "run-default",
+    resumeHandle: "resume-default",
+    readOnlyMode: "na",
+    readOnlyEvidence: null,
+    handoffs: [],
+    ...overrides,
+  };
+}
+
+function makeStandardLedger() {
+  return {
+    meta: {
+      schemaVersion: 1,
+      taskId: "FR-2026-001",
+      mode: "standard",
+      preDraftCases: false,
+      updatedAt: "2026-11-24T16:00:00+08:00",
+    },
+    versions: {
+      requirements: "req-v1",
+      design: "design-v1",
+      codeSnapshot: "git:abc1234",
+      testCases: "ut-v1",
+      testCasesStatus: "formal",
+      buildOrDevice: "build-20261124-01",
+      caseFormat: "markdown",
+    },
+    roles: {
+      "fr-requirements": makeRole({ contextId: "ctx-req-1", runHandle: "run-req-1", resumeHandle: "res-req-1", readOnlyMode: "enforced" }),
+      "fr-designer": makeRole({ contextId: "ctx-des-1", runHandle: "run-des-1", resumeHandle: "res-des-1" }),
+      "fr-design-reviewer": makeRole({ contextId: "ctx-drev-1", runHandle: "run-drev-1", resumeHandle: "res-drev-1", readOnlyMode: "enforced" }),
+      "fr-developer": makeRole({ contextId: "ctx-dev-1", runHandle: "run-dev-1", resumeHandle: "res-dev-1" }),
+      "fr-code-reviewer": makeRole({ contextId: "ctx-crev-1", runHandle: "run-crev-1", resumeHandle: "res-crev-1", readOnlyMode: "enforced" }),
+      "fr-test-case-author": makeRole({ contextId: "ctx-tca-1", runHandle: "run-tca-1", resumeHandle: "res-tca-1" }),
+      "fr-test-case-reviewer": makeRole({ contextId: "ctx-tcr-1", runHandle: "run-tcr-1", resumeHandle: "res-tcr-1", readOnlyMode: "enforced" }),
+      "fr-test-executor": makeRole({ contextId: "ctx-tex-1", runHandle: "run-tex-1", resumeHandle: "res-tex-1" }),
+    },
+    gates: {
+      A: { status: "confirmed", targetVersion: "req-v1", confirmedBy: "user", evidence: "chat-turn-2" },
+      B: { status: "confirmed", targetVersion: "design-v1", confirmedBy: "user", evidence: "chat-turn-5", implementationAuthorized: true },
+      AB: { status: "waived", targetVersion: null, confirmedBy: null, evidence: null, implementationAuthorized: false },
+      C: { status: "confirmed", targetVersion: "ut-v1", confirmedBy: "user", evidence: "chat-turn-9" },
+    },
+    utEntry: {
+      codeSnapshot: "git:abc1234",
+      devSelfTest: { passed: true, snapshot: "git:abc1234", evidence: "unit 42/42" },
+      devDiffSelfReview: { passed: true, snapshot: "git:abc1234", evidence: "reviewed 5 files" },
+      codeReview: { passed: true, snapshot: "git:abc1234", openBlockers: 0, evidence: "approved R1" },
+    },
+    loops: {
+      design: { validRounds: 1, maxRounds: 3, stagnationCount: 0, openBlockers: [] },
+      code: { validRounds: 1, maxRounds: 3, stagnationCount: 0, openBlockers: [] },
+      testCase: { validRounds: 1, maxRounds: 3, stagnationCount: 0, openBlockers: [] },
+      defectReturn: { cycles: 0, maxCycles: 2, pendingReturn: false, history: [] },
+    },
+    qaHandoff: {
+      buildOrDevice: "build-20261124-01",
+      codeSnapshot: "git:abc1234",
+      testCases: "ut-v1",
+      mandatorySummary: { passed: 10, failed: 0, blocked: 0, notRun: 0 },
+      readyForQa: true,
+      qaAccepted: false,
+    },
+  };
+}
+
+function makeLiteLedger() {
+  const ledger = makeStandardLedger();
+  ledger.meta.mode = "lite";
+  ledger.meta.liteRedlines = {
+    crossModuleContractChange: false,
+    securityOrPermissionChange: false,
+    deviceFlashOrPersistentStateChange: false,
+    majorArchitectureOrMigrationTradeoff: false,
+    unresolvedRequirementAmbiguity: false,
+  };
+  ledger.versions.design = null;
+  delete ledger.roles["fr-designer"];
+  delete ledger.roles["fr-design-reviewer"];
+  ledger.gates.A = { status: "waived", targetVersion: null, confirmedBy: null, evidence: null };
+  ledger.gates.B = { status: "waived", targetVersion: null, confirmedBy: null, evidence: null, implementationAuthorized: false };
+  ledger.gates.AB = {
+    status: "confirmed",
+    targetVersion: "req-v1",
+    confirmedBy: "user",
+    evidence: "chat-turn-2-lite-ab",
+    implementationAuthorized: true,
+  };
+  delete ledger.loops.design;
+  return ledger;
+}
+
+test("合法 standard 全流程台账通过所有适用门禁", () => {
+  const ledger = makeStandardLedger();
+  for (const gate of ["A", "B", "ut-entry", "C", "qa-handoff"]) {
+    const result = validateLedger(ledger, { gate });
+    assert.equal(result.ok, true, `gate ${gate} failed: ${JSON.stringify(result.errors)}`);
+  }
+  const abResult = validateLedger(ledger, { gate: "AB" });
+  assert.equal(abResult.ok, false);
+  assert.ok(abResult.errors.some((item) => item.code === "GATE_INVALID_FOR_MODE"));
+});
+
+test("合法 lite 全流程台账通过 AB、ut-entry、C 与 qa-handoff，且拒绝门禁 B", () => {
+  const ledger = makeLiteLedger();
+  for (const gate of ["AB", "ut-entry", "C", "qa-handoff"]) {
+    const result = validateLedger(ledger, { gate });
+    assert.equal(result.ok, true, `lite gate ${gate} failed: ${JSON.stringify(result.errors)}`);
+  }
+  const gateBResult = validateLedger(ledger, { gate: "B" });
+  assert.equal(gateBResult.ok, false);
+  assert.ok(gateBResult.errors.some((item) => item.code === "GATE_INVALID_FOR_MODE"));
+});
+
+test("lite 模式触发任一红线即被拦截", () => {
+  const ledger = makeLiteLedger();
+  ledger.meta.liteRedlines.deviceFlashOrPersistentStateChange = true;
+  const result = validateLedger(ledger, { gate: "AB" });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((item) => item.code === "LITE_REDLINE_TRIGGERED"));
+});
+
+test("跨角色 contextId 在同 contextScope 下碰撞（含 handoffs 历史）被拦截", () => {
+  const directCollision = makeStandardLedger();
+  directCollision.roles["fr-test-executor"].contextId = directCollision.roles["fr-developer"].contextId;
+  const directResult = validateLedger(directCollision, { gate: "qa-handoff" });
+  assert.equal(directResult.ok, false);
+  assert.ok(directResult.errors.some((item) => item.code === "ROLE_CONTEXT_COLLISION"));
+
+  const handoffCollision = makeStandardLedger();
+  handoffCollision.roles["fr-developer"].handoffs = [
+    { fromContextId: "ctx-dev-legacy", toContextId: "ctx-dev-1", reason: "session expired" },
+  ];
+  handoffCollision.roles["fr-code-reviewer"].contextId = "ctx-dev-legacy";
+  const handoffResult = validateLedger(handoffCollision, { gate: "ut-entry" });
+  assert.equal(handoffResult.ok, false);
+  assert.ok(handoffResult.errors.some((item) => item.code === "ROLE_CONTEXT_COLLISION"));
+});
+
+test("同角色续接刷新 runHandle/resumeHandle 但 contextId 不变时放行", () => {
+  const ledger = makeStandardLedger();
+  ledger.roles["fr-developer"].runHandle = "run-dev-2";
+  ledger.roles["fr-developer"].resumeHandle = "res-dev-2";
+  ledger.roles["fr-developer"].handoffs = [
+    { fromContextId: "ctx-dev-1", toContextId: "ctx-dev-1", reason: "same-context resume updated handle" },
+  ];
+  const result = validateLedger(ledger, { gate: "ut-entry" });
+  assert.equal(result.ok, true, JSON.stringify(result.errors));
+});
+
+test("独立 ut-entry 缺项或快照漂移被拦截；standalone 模式仅核对四项与角色隔离", () => {
+  const missingDiffCheck = makeStandardLedger();
+  missingDiffCheck.utEntry.devDiffSelfReview.passed = false;
+  const missingResult = validateLedger(missingDiffCheck, { gate: "ut-entry" });
+  assert.equal(missingResult.ok, false);
+  assert.ok(missingResult.errors.some((item) => item.code === "UT_ENTRY_DIFF_REVIEW_INVALID"));
+
+  const snapshotDrift = makeStandardLedger();
+  snapshotDrift.utEntry.codeReview.snapshot = "git:old0000";
+  const driftResult = validateLedger(snapshotDrift, { gate: "ut-entry" });
+  assert.equal(driftResult.ok, false);
+  assert.ok(driftResult.errors.some((item) => item.code === "UT_ENTRY_CODE_REVIEW_INVALID"));
+
+  const standaloneLedger = {
+    meta: { schemaVersion: 1, standalone: true, taskId: "UT-01", mode: "standard", preDraftCases: false, updatedAt: "2026-11-24T16:00:00+08:00" },
+    versions: { codeSnapshot: "git:abc1234" },
+    roles: {
+      "fr-developer": makeRole({ contextId: "ctx-dev-1", runHandle: "run-1", resumeHandle: null }),
+      "fr-code-reviewer": {
+        status: "completed",
+        actorType: "external-human",
+        contextId: "human:reviewer-alice",
+        contextScope: "external",
+        runHandle: null,
+        resumeHandle: null,
+        readOnlyMode: "na",
+        readOnlyEvidence: null,
+        handoffs: [],
+      },
+    },
+    utEntry: {
+      codeSnapshot: "git:abc1234",
+      devSelfTest: { passed: true, snapshot: "git:abc1234", evidence: "ok" },
+      devDiffSelfReview: { passed: true, snapshot: "git:abc1234", evidence: "ok" },
+      codeReview: { passed: true, snapshot: "git:abc1234", openBlockers: 0, evidence: "PR #12 approved by alice" },
+    },
+    loops: { code: { validRounds: 1, maxRounds: 3, stagnationCount: 0, openBlockers: [] } },
+  };
+  const standaloneResult = validateLedger(standaloneLedger, { gate: "ut-entry" });
+  assert.equal(standaloneResult.ok, true, JSON.stringify(standaloneResult.errors));
+});
+
+test("pre-draft 用例骨架未转为 formal 时不得通过门禁 C", () => {
+  const ledger = makeStandardLedger();
+  ledger.meta.preDraftCases = true;
+  ledger.versions.testCasesStatus = "pre-draft";
+  const result = validateLedger(ledger, { gate: "C" });
+  assert.equal(result.ok, false);
+  assert.ok(result.errors.some((item) => item.code === "TEST_CASES_PRE_DRAFT_NOT_ALLOWED"));
+});
+
+test("两级只读合规性：拒绝口头降级、无批准降级与指纹漂移，放行合法 verified-zero-write", () => {
+  const verbalOnly = makeStandardLedger();
+  verbalOnly.roles["fr-design-reviewer"].readOnlyMode = "na";
+  const verbalResult = validateLedger(verbalOnly, { gate: "B" });
+  assert.equal(verbalResult.ok, false);
+  assert.ok(verbalResult.errors.some((item) => item.code === "READ_ONLY_MODE_INVALID"));
+
+  const unapprovedDegradation = makeStandardLedger();
+  unapprovedDegradation.roles["fr-design-reviewer"].readOnlyMode = "verified-zero-write";
+  unapprovedDegradation.roles["fr-design-reviewer"].readOnlyEvidence = {
+    userApprovedDegradation: false,
+    approvalRef: "",
+    beforeFingerprint: "sha256:111",
+    afterFingerprint: "sha256:111",
+  };
+  const unapprovedResult = validateLedger(unapprovedDegradation, { gate: "B" });
+  assert.equal(unapprovedResult.ok, false);
+  assert.ok(unapprovedResult.errors.some((item) => item.code === "READ_ONLY_DEGRADATION_UNAPPROVED"));
+
+  const fingerprintDrift = makeStandardLedger();
+  fingerprintDrift.roles["fr-code-reviewer"].readOnlyMode = "verified-zero-write";
+  fingerprintDrift.roles["fr-code-reviewer"].readOnlyEvidence = {
+    userApprovedDegradation: true,
+    approvalRef: "chat-turn-6",
+    beforeFingerprint: "sha256:aaa",
+    afterFingerprint: "sha256:bbb",
+  };
+  const driftResult = validateLedger(fingerprintDrift, { gate: "ut-entry" });
+  assert.equal(driftResult.ok, false);
+  assert.ok(driftResult.errors.some((item) => item.code === "READ_ONLY_FINGERPRINT_DRIFT"));
+
+  const validDegraded = makeStandardLedger();
+  validDegraded.roles["fr-code-reviewer"].readOnlyMode = "verified-zero-write";
+  validDegraded.roles["fr-code-reviewer"].readOnlyEvidence = {
+    userApprovedDegradation: true,
+    approvalRef: "chat-turn-6",
+    beforeFingerprint: "sha256:aaa",
+    afterFingerprint: "sha256:aaa",
+  };
+  const validResult = validateLedger(validDegraded, { gate: "ut-entry" });
+  assert.equal(validResult.ok, true, JSON.stringify(validResult.errors));
+});
+
+test("UT 缺陷回流外环熔断、affectedScope 核验与停滞计数校验", () => {
+  const validDefectReturn = makeStandardLedger();
+  validDefectReturn.versions.codeSnapshot = "git:def5678";
+  validDefectReturn.utEntry.codeSnapshot = "git:def5678";
+  validDefectReturn.utEntry.devSelfTest.snapshot = "git:def5678";
+  validDefectReturn.utEntry.devDiffSelfReview.snapshot = "git:def5678";
+  validDefectReturn.utEntry.codeReview.snapshot = "git:def5678";
+  validDefectReturn.qaHandoff.codeSnapshot = "git:def5678";
+  validDefectReturn.loops.defectReturn = {
+    cycles: 1,
+    maxCycles: 2,
+    pendingReturn: false,
+    history: [
+      {
+        cycle: 1,
+        fullRoundCompleted: true,
+        failedCaseIds: ["UT-04"],
+        affectedScope: ["parser/retry.js", "config/validator.js"],
+        reviewerVerifiedScope: true,
+        codeReviewRounds: 2,
+        retestSnapshot: "git:def5678",
+        retestBuildOrDevice: "build-20261124-01",
+      },
+    ],
+  };
+  const validRes = validateLedger(validDefectReturn, { gate: "qa-handoff" });
+  assert.equal(validRes.ok, true, JSON.stringify(validRes.errors));
+
+  const midUtAbort = structuredClone(validDefectReturn);
+  midUtAbort.loops.defectReturn.history[0].fullRoundCompleted = false;
+  const midAbortRes = validateLedger(midUtAbort, { gate: "qa-handoff" });
+  assert.equal(midAbortRes.ok, false);
+  assert.ok(midAbortRes.errors.some((item) => item.code === "DEFECT_RETURN_MID_UT_ABORT_FORBIDDEN"));
+
+  const unverifiedScope = structuredClone(validDefectReturn);
+  unverifiedScope.loops.defectReturn.history[0].reviewerVerifiedScope = false;
+  const scopeRes = validateLedger(unverifiedScope, { gate: "qa-handoff" });
+  assert.equal(scopeRes.ok, false);
+  assert.ok(scopeRes.errors.some((item) => item.code === "DEFECT_HISTORY_SCOPE_UNVERIFIED"));
+
+  const exceededCycles = structuredClone(validDefectReturn);
+  exceededCycles.loops.defectReturn.cycles = 3;
+  const exceededRes = validateLedger(exceededCycles, { gate: "qa-handoff" });
+  assert.equal(exceededRes.ok, false);
+  assert.ok(exceededRes.errors.some((item) => item.code === "DEFECT_CYCLES_EXCEEDED"));
+
+  const pendingAtLimit = structuredClone(validDefectReturn);
+  pendingAtLimit.loops.defectReturn.cycles = 2;
+  pendingAtLimit.loops.defectReturn.pendingReturn = true;
+  const pendingRes = validateLedger(pendingAtLimit, { gate: "qa-handoff" });
+  assert.equal(pendingRes.ok, false);
+  assert.ok(pendingRes.errors.some((item) => item.code === "DEFECT_CYCLES_EXCEEDED"));
+
+  const stagnant = makeStandardLedger();
+  stagnant.loops.design.stagnationCount = 2;
+  const stagnantRes = validateLedger(stagnant, { gate: "B" });
+  assert.equal(stagnantRes.ok, false);
+  assert.ok(stagnantRes.errors.some((item) => item.code === "LOOP_STAGNATION_REACHED"));
+});
+
+test("qa-handoff 拦截未通过必测项宣称完成或越权宣称 QA 通过", () => {
+  const incomplete = makeStandardLedger();
+  incomplete.qaHandoff.mandatorySummary.blocked = 1;
+  incomplete.qaHandoff.readyForQa = true;
+  const incompleteRes = validateLedger(incomplete, { gate: "qa-handoff" });
+  assert.equal(incompleteRes.ok, false);
+  assert.ok(incompleteRes.errors.some((item) => item.code === "QA_HANDOFF_INCOMPLETE_RESULTS"));
+
+  const claimedQa = makeStandardLedger();
+  claimedQa.qaHandoff.qaAccepted = true;
+  const qaRes = validateLedger(claimedQa, { gate: "qa-handoff" });
+  assert.equal(qaRes.ok, false);
+  assert.ok(qaRes.errors.some((item) => item.code === "QA_ACCEPTANCE_CLAIMED_BY_DEV"));
+});
+
+test("CLI 模式支持 stdin 输入并返回正确退出码", () => {
+  const scriptPath = path.resolve(__dirname, "validate-ledger.cjs");
+  const validOutput = execFileSync(process.execPath, [scriptPath, "--gate", "qa-handoff", "-"], {
+    input: JSON.stringify(makeStandardLedger()),
+    encoding: "utf8",
+  });
+  assert.equal(JSON.parse(validOutput).ok, true);
+
+  const invalidLedger = makeLiteLedger();
+  invalidLedger.meta.liteRedlines.securityOrPermissionChange = true;
+  let exitCode = 0;
+  let stdoutText = "";
+  try {
+    execFileSync(process.execPath, [scriptPath, "--gate", "AB", "-"], {
+      input: JSON.stringify(invalidLedger),
+      encoding: "utf8",
+    });
+  } catch (execError) {
+    exitCode = execError.status;
+    stdoutText = execError.stdout;
+  }
+  assert.equal(exitCode, 1);
+  assert.equal(JSON.parse(stdoutText).ok, false);
+});

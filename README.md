@@ -26,15 +26,34 @@ Private collection of Agent Skills used for software engineering work.
   agents/            (optional)
   references/        (optional)
   test-prompts.json
+docs/                (workflow diagrams and repository-level notes)
+scripts/             (zero-dependency Node.js validation tools and unit tests)
 ```
 
 Each Skill owns a small invocation file and discloses heavier reference material only when its workflow needs it.
 
 ## Workflow subagents
 
-The FR workflows define logical roles and use the subagent tools available in the current harness. An orchestrator hands each role a versioned task, verifies its evidence, and advances through the human approval gates. See [subagent dispatch and handoff](xu-fr-flow/references/subagent-dispatch.md) for the capability checks and examples for OpenCode, Codex, Pi, DeepSeek Harness, and Kimi Code.
+The FR workflows are capability-driven and harness-agnostic: they define logical roles, stable context identities (`contextId` + `contextScope`), two-tier read-only isolation (`enforced` by default, or `verified-zero-write` only after explicit user approval with pre/post workspace/VCS state fingerprint checks), structured `flow-ledger` tracking, and explicit human approval gates (`standard` A/B/C or explicit redline-gated `lite` AB/C). Each standalone loop skill (`xu-design-review-loop`, `xu-dev-review-loop`, `xu-dev-ut-loop`) ships a self-contained `references/dispatch-and-ledger.md` so it can be installed independently in any harness. See [subagent dispatch and handoff](xu-fr-flow/references/subagent-dispatch.md) for the capability model and non-normative harness mapping examples.
 
-The optional OpenCode profiles in `.opencode/agents/` map to the same `fr-*` roles. OpenCode discovers skills and profiles separately. To use these profiles in another project, install or link them into that project's `.opencode/agents/` directory or the global `~/.config/opencode/agents/` directory. Keep their IDs unchanged.
+This repository maintains harness-agnostic workflow skills and does not maintain harness-specific agent profiles; orchestrators bind logical `fr-*` roles dynamically via whatever isolated subagent capability the current harness provides. Standalone HTML flow visuals (such as [xu-dev-review-loop-flow.html](docs/xu-dev-review-loop-flow.html)) live under `docs/` to keep skill packages lightweight.
+
+## Validation & Scripts
+
+Zero-dependency Node.js tools under `scripts/` enforce ledger gate invariants and cross-skill alignment:
+
+- Validate a `flow-ledger` JSON payload against a target gate (`A`, `B`, `AB`, `C`, `ut-entry`, or `qa-handoff`):
+  ```bash
+  node scripts/validate-ledger.cjs --gate ut-entry path/to/ledger.json
+  ```
+- Check shared governance clauses, relative links, standalone self-containment, and package cleanliness across the four `xu-*` orchestration skills:
+  ```bash
+  node scripts/check-skills-consistency.cjs
+  ```
+- Run the full repository test suite and consistency check:
+  ```bash
+  node --test xu-dev-review-loop/workflow.test.cjs scripts/validate-ledger.test.cjs scripts/check-skills-consistency.test.cjs && node scripts/check-skills-consistency.cjs
+  ```
 
 ## Development
 
@@ -42,4 +61,5 @@ The optional OpenCode profiles in `.opencode/agents/` map to the same `fr-*` rol
 - Follow RED-GREEN-REFACTOR when changing Skill behavior: establish a failing agent scenario, make the smallest guidance change, then rerun the scenario.
 - Keep `SKILL.md` focused on invocation and execution; place heavy reference material in the Skill's `references/` directory.
 - Keep behavioral regression scenarios in `test-prompts.json`.
+- Run the repository validation suite before synchronizing runtime-installed copies, then verify checksums.
 - Synchronize runtime-installed copies only after validation, then verify checksums.

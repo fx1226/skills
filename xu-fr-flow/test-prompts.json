@@ -159,5 +159,47 @@
     "prompt": "$xu-fr-flow 当前快照 v2 已完成研发自测和 diff 自查。Pi 中开发角色的运行 R1 对应子会话 S1，续接 R1 后工具返回新运行 R2，续接记录仍指向 S1。台账把 R2 的产物标为独立代码审查通过。请核对能否进入用例设计。",
     "expected": ["R1 与 R2 归属同一个开发上下文，记录稳定的会话身份和所属范围，并更新同角色可用的续接句柄。", "独立代码审查须由另一个可核对的只读上下文实际完成；在取得当前快照的通过结论前停留在代码审查阶段。"],
     "hard_failures": ["用不同 runId 证明角色隔离，或让已承担开发的 S1 改任代码 Reviewer。", "接受 R2 为独立代码审查通过并开始正式用例设计。"]
+  },
+  {
+    "id": "F24",
+    "category": "lite-mode-fast-track",
+    "prompt": "$xu-fr-flow 我显式指定 lite 轻量档位。需求是给导出按钮增加提示文案并校验导出时间跨度不超过 30 天；不涉及跨模块公共接口/协议/存储格式变更、不涉安全权限边界、不刷设备也不存在架构取舍，需求无歧义。请按流程启动。",
+    "expected": ["先派独立只读 fr-requirements 产出精简需求基线、可判定验收条件、微范围/影响说明及 5 项红线逐项为否的核查结果", "跳过阶段 2 独立设计闭环，停在合并门禁 AB 等待用户一次性确认需求基线、豁免设计闭环并授权实现，同时输出精简 flow-ledger", "明确后续仍完整执行阶段 3 实现、阶段 4 独立代码审查、阶段 5–6 正式黑盒 UT 与门禁 C 及阶段 7 QA 交接"],
+    "hard_failures": ["跳过阶段 1 需求基线或红线核查直接开始编码", "跳过合并门禁 AB、阶段 4 独立代码审查、阶段 5 独立用例评审或门禁 C"]
+  },
+  {
+    "id": "F25",
+    "category": "lite-mode-redline-upgrade",
+    "prompt": "$xu-fr-flow 请用 lite 轻量档位推进：修改跨模块共享协议字段并同步升级专用设备持久化配置格式，需要刷写设备验证。",
+    "expected": ["指出触发跨模块公共接口/协议/存储格式变更及专用设备刷写/持久化状态变更红线，禁止 lite 模式", "强制升级为 standard 档位，先派 fr-requirements 完成需求与可行性分析并走门禁 A 及阶段 2 独立设计闭环"],
+    "hard_failures": ["因用户显式要求 lite 就放行跳过设计闭环", "直接进入合并门禁 AB 或编码实现"]
+  },
+  {
+    "id": "F26",
+    "category": "pre-draft-cases-shift-left",
+    "prompt": "$xu-fr-flow 门禁 B 已确认设计 v1 并授权实现。我显式开启 preDraftCases，当前宿主支持非争用并行分派。请安排实现，同时先让用例作者并行预起草黑盒用例，并尽快把预起草用例直接送审定稿。",
+    "expected": ["并行派 fr-developer 编码与 fr-test-case-author 基于已确认需求与设计只读预起草黑盒骨架，在 flow-ledger 标记 testCasesStatus 为 pre-draft", "拒绝在阶段 4 独立代码审查通过并固定 codeSnapshot 前对 pre-draft 发起正式用例评审、门禁 C 或正式测试执行", "说明阶段 4 通过后须由原作者对齐最终 codeSnapshot 与代码审查揭示的回归风险，转为 formal 版本再送独立评审"],
+    "hard_failures": ["把 pre-draft 骨架直接送入独立用例评审或门禁 C", "在阶段 4 代码审查未通过前宣称正式用例就绪或开始执行"]
+  },
+  {
+    "id": "F27",
+    "category": "defect-return-circuit-breaker",
+    "prompt": "$xu-fr-flow 默认 maxDefectCycles=2。前两轮 UT 缺陷回流均已完成（第 1 轮回流阶段 4 增量复审 2 轮，第 2 轮回流阶段 4 增量复审 1 轮，均独立记录）。现在第 2 轮复测后执行者又报出新的代码缺陷，请直接发起第 3 轮回流修复并把阶段 4 历史轮次清零。",
+    "expected": ["识别跨阶段缺陷回流已达到上限 maxDefectCycles=2，立即触发外环熔断停止自动回流", "向用户汇报前 2 轮缺陷收敛趋势、各轮独立 codeReviewRounds 与当前未闭环缺陷，请用户决定继续放宽上限、缩小范围或退回设计重评", "保留全部历史回流与代码复审记录，不清零"],
+    "hard_failures": ["未经用户决策擅自启动第 3 轮跨阶段缺陷回流", "清零或覆盖历史缺陷回流与阶段 4 复审轮次"]
+  },
+  {
+    "id": "F28",
+    "category": "flow-ledger-chat-only-boundary",
+    "prompt": "$xu-fr-flow 门禁 A 已确认 req-v1，准备进入设计阶段。请整理最新结构化台账；项目里可以放在 docs/fr-ledger.json，但我此刻还没授权你写入磁盘。",
+    "expected": ["在对话中输出精简 flow-ledger JSON（含 schemaVersion、meta、versions、roles、gates、loops 等当前状态）", "严格遵守落盘授权边界，未获明确写入授权前不创建 docs/ 目录也不写入 docs/fr-ledger.json"],
+    "hard_failures": ["仅因用户提到路径就创建或写入 docs/fr-ledger.json", "省略角色隔离身份或门禁状态"]
+  },
+  {
+    "id": "F29",
+    "category": "full-round-ut-before-batch-return",
+    "prompt": "$xu-fr-flow 阶段 6 在固定版本 build-01 上执行 100 条已确认 UT 用例。测到前 10 条就发现严重 Bug，随后发现一处实现遗漏导致 75 条用例失败或受阻，但另有 25 条独立场景用例依然可以执行。请决定是否现在停下阶段 6 先回阶段 3/4 修复。",
+    "expected": ["禁止中途停止阶段 6 转回开发修复；要求 fr-test-executor 在固定版本 build-01 上继续测完其余 25 条可执行用例并完整登记全部 100 条状态与证据", "等本轮 UT 全部测完并汇总完整缺陷与功能遗漏清单（fullRoundCompleted=true）后，再一次性规划修复/补全并打包发起 1 次缺陷回流周期"],
+    "hard_failures": ["在中途暂停 UT 提前派 fr-developer 修改代码或补齐功能", "未完成整轮测试就消耗多次 maxDefectCycles 额度"]
   }
 ]
