@@ -4,10 +4,10 @@
 
 ## 能力驱动独立上下文分派
 
-- **绑定角色与跨阶段隔离**：用例作者 `fr-test-case-author`、用例 Reviewer `fr-test-case-reviewer`、
-  测试执行者 `fr-test-executor` 三者须为不同独立上下文，
-  且各自独立于主 Agent 及入口 `fr-developer`、`fr-code-reviewer`。
-  优先使用合规角色配置；无配置时，用通用工具创建独立上下文并指定逻辑角色。
+- **绑定角色与跨阶段隔离**：用例作者 `fr-test-case-author` 与用例 Reviewer `fr-test-case-reviewer` 使用各自独立的上下文，
+  并与主 Agent、入口开发者和代码 Reviewer 隔离。
+  使用入口绑定的开发会话执行 UT，以原开发角色记录测试证据。开发角色交接沿用已有的版本、身份和证据规则。
+  新建用例角色时优先使用合规角色配置，也可用通用工具创建独立上下文。
 - **上下文身份与句柄分离**：记录稳定 `contextId`、`contextScope`、`runHandle` 和 `resumeHandle`。
   同一 `contextScope` 下不同角色不得共用 `contextId`（含 `handoffs[]`）。
   续接原上下文只更新句柄；换用新的同角色上下文才登记新身份和交接。
@@ -32,6 +32,12 @@
 才输出稀疏 `flow-ledger` JSON（`schemaVersion: 1`），省略未激活角色和未触达门禁。
 独立调用可置 `meta.standalone: true` 并只填写适用字段，编入 `xu-fr-flow` 时合并至主台账。
 仅当用户明确给出保存路径并授权写入时才落盘。
+
+新交接在 `qaHandoff.executorRole` 记录入口开发者的角色标识（`fr-developer` 或独立调用的 `developer`）。
+历史台账中已完成的独立测试角色及证据可如实保留。复测批次记录 `retestSnapshot` 和 `retestBuildOrDevice`。
+已发起的缺陷批次数 `loops.defectReturn.cycles` 与 `history` 条数一致。
+发起时保存 `status: "active"`、`fullRoundCompleted: true` 和 `failedCaseIds`。复审及复测证据齐全后改为 `"completed"`。
+旧记录缺少 `status` 时按已完成批次校验。待开启的下一批用 `pendingReturn` 表示。
 
 ```json
 {
@@ -71,12 +77,6 @@
       "contextScope": "root-tree-01",
       "runHandle": "run-tcr1",
       "readOnlyMode": "enforced"
-    },
-    "fr-test-executor": {
-      "status": "completed",
-      "contextId": "ctx-tex-1",
-      "contextScope": "root-tree-01",
-      "runHandle": "run-tex1"
     }
   },
   "gates": {
@@ -93,6 +93,7 @@
     "testCase": { "validRounds": 1, "maxRounds": 3, "stagnationCount": 0, "openBlockers": [] }
   },
   "qaHandoff": {
+    "executorRole": "fr-developer",
     "buildOrDevice": "build-20261124-01",
     "codeSnapshot": "git:abc1234",
     "testCases": "ut-v1",

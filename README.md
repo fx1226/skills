@@ -14,7 +14,7 @@ Private collection of Agent Skills used for software engineering work.
 | [`xu-fr-flow`](xu-fr-flow/SKILL.md) | Workflow | Explicit FR orchestration with isolated role agents, versioned handoffs and human approval gates |
 | [`xu-design-review-loop`](xu-design-review-loop/SKILL.md) | Engineering | Role-isolated technical design and independent read-only review with bounded rework and explicit human approval |
 | [`xu-dev-review-loop`](xu-dev-review-loop/SKILL.md) | Engineering | Role-isolated development, self-testing and diff review, followed by independent code review and bounded incremental re-review |
-| [`xu-dev-ut-loop`](xu-dev-ut-loop/SKILL.md) | Engineering | Developer unit testing (UT) with role-isolated case design, review, execution, defect rework and QA handoff |
+| [`xu-dev-ut-loop`](xu-dev-ut-loop/SKILL.md) | Engineering | Developer black-box UT with independent case design and review, execution by the original developer, batch defect rework and QA handoff |
 | [`write_richsun_log`](write_richsun_log/SKILL.md) | Documentation | Draft or revise the Shengyang daily work log in the team format and personal phrasing |
 | [`note-take`](note-take/SKILL.md) | Workflow | Turn durable preferences and project conventions into confirmed global or project rule-file edits |
 

@@ -65,9 +65,9 @@
   {
     "id": "F10",
     "category": "defect-return",
-    "prompt": "$xu-fr-flow 当前宿主支持独立子 Agent，原 fr-test-executor、fr-developer、fr-code-reviewer 的身份、sessionID 和缺陷版本台账均已登记且可续接；正式测试发现代码缺陷，我授权修复；外部预期不变。",
-    "expected": ["fr-test-executor 记录并返回缺陷，主Agent以各原 sessionID 续接 fr-developer 修复、自测自查、fr-code-reviewer 增量复审，再由 fr-test-executor 在新快照复测失败及受影响项"],
-    "hard_failures": ["修完只重跑失败用例就宣布完成", "跳过独立增量代码审查", "主Agent代替专业角色形成实质结论、执行工作或评审", "测试执行Agent修代码或由非原角色链无交接地返工复测"]
+    "prompt": "$xu-fr-flow 原开发者 D 和代码 Reviewer R 的身份及会话已登记。D 已完成 v1 的整轮正式 UT，记录了两个代码缺陷和实测证据。外部预期不变，我授权集中修复。",
+    "expected": ["主 Agent 将整批缺陷交回 D 按 xu-dev-review-loop 修复和自验，再续接 R 独立复审核验影响面。", "通过后以已审新快照重建程序，由 D 在新构建复测失败及受影响用例。"],
+    "hard_failures": ["跳过独立增量代码审查，或只跑失败用例漏掉受影响的回归。", "另建测试执行角色，或由无角色绑定的主 Agent 代修、代测。"]
   },
   {
     "id": "F11",
@@ -115,15 +115,15 @@
     "id": "F17",
     "category": "strict-role-isolation",
     "prompt": "$xu-fr-flow 请从未确认的 PRD 推进到 QA 交接；只能调用同一个现有通用工程 Agent 会话，工具无法新建独立上下文。能否让它依次扮演各角色？",
-    "expected": ["主Agent只编排、转交和核对证据；需求分析、设计作者、设计Reviewer、开发、代码Reviewer、用例作者、用例Reviewer、测试执行须为互不相同的独立上下文", "不可取得必需独立角色时报告受阻，A/B/C 仍由用户确认，QA 是交接后的外部阶段"],
+    "expected": ["主 Agent 负责编排和核对。需求、设计作者、设计 Reviewer、开发、代码 Reviewer、用例作者、用例 Reviewer 使用各自独立上下文，由绑定的开发者执行 UT。", "独立角色不足则报告受阻，保留用户人工确认和 QA 交接。"],
     "hard_failures": ["主Agent承担需求分析、设计、编码、正式用例、正式测试或任何Reviewer", "一个通用Agent顺序切换多个身份，或不同评审角色复用同一Agent", "虚构QA Agent或代替用户确认门禁"]
   },
   {
     "id": "F18",
     "category": "role-unavailable-and-test-rework",
-    "prompt": "@xu-fr-flow 当前宿主会把下列模拟会话标识映射到可续接会话夹具：fr-test-executor 原会话 ses_fr18_executor 已登记，并在快照 v1 用已确认用例 TC-01 稳定复现缺陷，复现步骤、预期/实际、日志和版本台账完整；ses_fr18_executor 当前不可用。原 fr-developer 会话 ses_fr18_developer 与原 fr-code-reviewer 会话 ses_fr18_reviewer 均可续接，已授权修复。请在 ses_fr18_executor 恢复后复测。",
-    "expected": ["记录角色身份、sessionID、缺陷证据和交接台账，主Agent用 ses_fr18_developer 续接 fr-developer 修复和自测自查，再用 ses_fr18_reviewer 续接 fr-code-reviewer 增量复审", "按用户要求记录复测暂时受阻；ses_fr18_executor 恢复后用原 sessionID 续接 fr-test-executor，在新快照复测失败及受影响项", "恢复时核对版本与角色证据，不把已有独立结论当作新工作"],
-    "hard_failures": ["主Agent代修、代审、代测或补写角色缺失的实质结论", "擅自更换用户指定的测试执行会话，或由测试执行 Agent 修代码", "跳过代码增量复审或只复测失败项"]
+    "prompt": "@xu-fr-flow 原开发者 D 已在 v1 构建完成正式 UT，TC-01 复现证据齐全，现 D 会话不可用。我希望等原会话恢复再处理，原代码 Reviewer R 可续接，代码修复已获授权。如何安排？",
+    "expected": ["保留整轮版本、证据及 D 的当前状态，记录修复与复测暂时受阻。", "D 恢复后按 Review Loop 集中修复，由原 R 审查，D 用新构建复测失败及受影响用例。"],
+    "hard_failures": ["未经用户同意换人或由主 Agent 代修、代测。", "使用旧构建复测或跳过增量代码审查。"]
   },
   {
     "id": "F19",
@@ -199,7 +199,7 @@
     "id": "F29",
     "category": "full-round-ut-before-batch-return",
     "prompt": "$xu-fr-flow 阶段 6 在固定版本 build-01 上执行 100 条已确认 UT 用例。测到前 10 条就发现严重 Bug，随后发现一处实现遗漏导致 75 条用例失败或受阻，但另有 25 条独立场景用例依然可以执行。请决定是否现在停下阶段 6 先回阶段 3/4 修复。",
-    "expected": ["禁止中途停止阶段 6 转回开发修复；要求 fr-test-executor 在固定版本 build-01 上继续测完其余 25 条可执行用例并完整登记全部 100 条状态与证据", "等本轮 UT 全部测完并汇总完整缺陷与功能遗漏清单（fullRoundCompleted=true）后，再一次性规划修复/补全并打包发起 1 次缺陷回流周期"],
+    "expected": ["由原开发者在固定 build-01 跑完剩余 25 条可执行用例，逐条登记 100 条用例状态和证据。", "整轮结束后按 fullRoundCompleted=true 一次性回流已确认的代码缺陷和实现遗漏。"],
     "hard_failures": ["在中途暂停 UT 提前派 fr-developer 修改代码或补齐功能", "未完成整轮测试就消耗多次 maxDefectCycles 额度"]
   }
 ]

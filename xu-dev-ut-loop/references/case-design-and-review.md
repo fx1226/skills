@@ -28,7 +28,7 @@
 
 ## 独立评审与闭环
 
-用例 Reviewer 使用与主 Agent、入口开发、代码 Reviewer、作者和执行者各自独立的上下文。
+用例 Reviewer 使用独立上下文，与主 Agent、用例作者、原开发者和代码 Reviewer 隔离。
 Reviewer 遵守 [分派、只读与台账契约](dispatch-and-ledger.md) 的两级只读协议：
 默认 `enforced`；缺强只读先报缺口，获用户明确批准后才可降级为 `verified-zero-write`。
 只读核对 `formal` 用例、需求和设计依据、覆盖自查与代码快照，不修改用例或执行测试。

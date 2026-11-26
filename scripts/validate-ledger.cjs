@@ -417,12 +417,12 @@ function validateLoops(ledger, errors) {
       if (!Array.isArray(defectReturn.history)) {
         addError(errors, "DEFECT_HISTORY_INVALID", `${basePath}.history`, "defectReturn.history must be an array");
       } else {
-        if (isIntInRange(maxCycles, 1, 10) && defectReturn.history.length > maxCycles) {
+        if (Number.isInteger(defectReturn.cycles) && defectReturn.history.length !== defectReturn.cycles) {
           addError(
             errors,
-            "DEFECT_CYCLES_EXCEEDED",
+            "DEFECT_HISTORY_COUNT_MISMATCH",
             `${basePath}.history`,
-            `defectReturn.history length (${defectReturn.history.length}) exceeds maxCycles (${maxCycles})`
+            `defectReturn.history must contain exactly ${defectReturn.cycles} started batches`
           );
         }
         defectReturn.history.forEach((entry, index) => {
@@ -439,7 +439,7 @@ function validateLoops(ledger, errors) {
               errors,
               "DEFECT_RETURN_MID_UT_ABORT_FORBIDDEN",
               `${itemPath}.fullRoundCompleted`,
-              "UT defect return requires completing the full confirmed suite on the fixed version first (fullRoundCompleted: true)"
+              "UT defect return requires completing the current round's planned cases on the fixed version first (fullRoundCompleted: true)"
             );
           }
           if (!Array.isArray(entry.failedCaseIds) || entry.failedCaseIds.length === 0 || !entry.failedCaseIds.every(isNonEmptyString)) {
@@ -449,6 +449,24 @@ function validateLoops(ledger, errors) {
               `${itemPath}.failedCaseIds`,
               "failedCaseIds must be a non-empty array of case IDs"
             );
+          }
+          const isActive = entry.status === "active";
+          if ((!isActive || entry.codeReviewRounds !== undefined) && !isIntInRange(entry.codeReviewRounds, 1, 5)) {
+            addError(
+              errors,
+              "DEFECT_HISTORY_REVIEW_ROUNDS_INVALID",
+              `${itemPath}.codeReviewRounds`,
+              "codeReviewRounds must be an integer between 1 and 5"
+            );
+          }
+          if (isActive) {
+            if (index !== defectReturn.history.length - 1) {
+              addError(errors, "DEFECT_HISTORY_ACTIVE_ORDER_INVALID", `${itemPath}.status`, "Only the latest batch may be active");
+            }
+            return;
+          }
+          if (entry.status !== undefined && entry.status !== "completed") {
+            addError(errors, "DEFECT_HISTORY_STATUS_INVALID", `${itemPath}.status`, 'Batch status must be "active" or "completed"');
           }
           const hasAffectedScope =
             isNonEmptyString(entry.affectedScope) ||
@@ -467,14 +485,6 @@ function validateLoops(ledger, errors) {
               "DEFECT_HISTORY_SCOPE_UNVERIFIED",
               `${itemPath}.reviewerVerifiedScope`,
               "Code reviewer must verify affectedScope (reviewerVerifiedScope: true)"
-            );
-          }
-          if (!isIntInRange(entry.codeReviewRounds, 1, 5)) {
-            addError(
-              errors,
-              "DEFECT_HISTORY_REVIEW_ROUNDS_INVALID",
-              `${itemPath}.codeReviewRounds`,
-              "codeReviewRounds must be an integer between 1 and 5"
             );
           }
           if (!isNonEmptyString(entry.retestSnapshot)) {
@@ -600,6 +610,11 @@ function checkGateB(ledger, context, errors) {
   requireConfirmedGate(ledger.gates, "B", context.versions.design, errors, { ...context.gateOptions, requireImplAuth: true });
 }
 
+function devReviewRoleId(context, localId) {
+  const flowId = `fr-${localId}`;
+  return context.standalone && !Object.hasOwn(context.roles, flowId) ? localId : flowId;
+}
+
 function checkUtEntry(ledger, context, errors) {
   if (!context.standalone) {
     if (context.mode === "standard") {
@@ -614,9 +629,7 @@ function checkUtEntry(ledger, context, errors) {
     addError(errors, "VERSION_CODE_SNAPSHOT_MISSING", "versions.codeSnapshot", "versions.codeSnapshot must be non-empty for ut-entry");
   }
   for (const localId of DEV_REVIEW_ROLES) {
-    const flowId = `fr-${localId}`;
-    const roleId = context.standalone && !Object.hasOwn(context.roles, flowId) ? localId : flowId;
-    requireRoleCompleted(context.roles, roleId, errors);
+    requireRoleCompleted(context.roles, devReviewRoleId(context, localId), errors);
   }
 
   const utEntry = ledger.utEntry;
@@ -698,6 +711,8 @@ function checkGateC(ledger, context, errors) {
       "versions.testCasesStatus",
       'Pre-draft test cases ("pre-draft") must be aligned to final codeSnapshot and promoted to "formal" before gate C'
     );
+  } else if (context.versions.testCasesStatus !== "formal") {
+    addError(errors, "TEST_CASES_FORMAL_REQUIRED", "versions.testCasesStatus", 'Gate C requires testCasesStatus "formal"');
   }
   requireRoleCompleted(context.roles, "fr-test-case-author", errors);
   requireRoleCompleted(context.roles, "fr-test-case-reviewer", errors);
@@ -714,24 +729,30 @@ function checkGateC(ledger, context, errors) {
 
 function checkQaHandoff(ledger, context, errors) {
   checkGateC(ledger, context, errors);
-  requireRoleCompleted(context.roles, "fr-test-executor", errors);
+  const qaHandoff = ledger.qaHandoff;
+  const executorRole = qaHandoff?.executorRole;
+  if (executorRole === undefined) {
+    requireRoleCompleted(context.roles, "fr-test-executor", errors);
+  } else if (executorRole !== devReviewRoleId(context, "developer")) {
+    addError(
+      errors,
+      "QA_EXECUTOR_ROLE_MISMATCH",
+      "qaHandoff.executorRole",
+      "executorRole must identify the developer bound at UT entry"
+    );
+  }
 
   if (!isNonEmptyString(context.versions.buildOrDevice)) {
     addError(errors, "VERSION_BUILD_OR_DEVICE_MISSING", "versions.buildOrDevice", "versions.buildOrDevice must be non-empty for qa-handoff");
   }
 
-  const defectReturn = context.loops.defectReturn;
-  if (isPlainObject(defectReturn) && Number.isInteger(defectReturn.cycles) && defectReturn.cycles > 0) {
-    if (!Array.isArray(defectReturn.history) || defectReturn.history.length < defectReturn.cycles) {
-      addError(
-        errors,
-        "DEFECT_HISTORY_COUNT_MISMATCH",
-        "loops.defectReturn.history",
-        `defectReturn.history must contain at least ${defectReturn.cycles} entries matching defectReturn.cycles`
-      );
+  const history = context.loops.defectReturn?.history;
+  const latestEntry = Array.isArray(history) ? history.at(-1) : undefined;
+  if (isPlainObject(latestEntry)) {
+    if (latestEntry.status === "active") {
+      addError(errors, "DEFECT_HISTORY_STILL_ACTIVE", "loops.defectReturn.history", "Complete the active batch before QA handoff");
     } else {
-      const latestEntry = defectReturn.history[defectReturn.history.length - 1];
-      if (isPlainObject(latestEntry) && latestEntry.retestSnapshot !== context.versions.codeSnapshot) {
+      if (latestEntry.retestSnapshot !== context.versions.codeSnapshot) {
         addError(
           errors,
           "DEFECT_RETEST_SNAPSHOT_MISMATCH",
@@ -739,10 +760,19 @@ function checkQaHandoff(ledger, context, errors) {
           `Latest defect return retestSnapshot ("${String(latestEntry.retestSnapshot)}") must match current codeSnapshot ("${String(context.versions.codeSnapshot)}")`
         );
       }
+      if (executorRole !== undefined &&
+          (!isNonEmptyString(latestEntry.retestBuildOrDevice) ||
+           latestEntry.retestBuildOrDevice !== context.versions.buildOrDevice)) {
+        addError(
+          errors,
+          "DEFECT_RETEST_BUILD_MISMATCH",
+          "loops.defectReturn.history",
+          "Latest defect return retestBuildOrDevice must match current buildOrDevice"
+        );
+      }
     }
   }
 
-  const qaHandoff = ledger.qaHandoff;
   if (!isPlainObject(qaHandoff)) {
     addError(errors, "QA_HANDOFF_MISSING", "qaHandoff", "qa-handoff requires qaHandoff object");
     return;
@@ -776,6 +806,9 @@ function checkQaHandoff(ledger, context, errors) {
     }
   }
   if (qaHandoff.readyForQa === true) {
+    if (context.loops.defectReturn?.pendingReturn === true) {
+      addError(errors, "DEFECT_RETURN_PENDING", "loops.defectReturn.pendingReturn", "Resolve the pending defect return before marking readyForQa");
+    }
     if (summary.passed <= 0 || summary.failed > 0 || summary.blocked > 0 || summary.notRun > 0) {
       addError(
         errors,

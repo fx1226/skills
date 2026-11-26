@@ -334,7 +334,7 @@
     "prompt": "UT-07 触发第一次缺陷回流，首次提交前审查已用 2 轮。本次回流已有 4 份正式复审结论，阻塞逐轮减少，未触发其他停止条件。独立调用和由 xu-fr-flow 调用都没有另设上限。请说明交付哪些材料、第 5 轮通过或仍有阻塞各如何处理。若预先只给本次回流 3 轮额度，何时停？",
     "expected": [
       "原开发者修复、自测并自查 diff，给出 affectedScope（改动模块、调用方和建议回归范围）。原 Reviewer 核实修复及影响面",
-      "两种调用方式都可进行第 5 轮。通过则交执行者复测；仍有阻塞则进入 WAIT_USER，报告未结项并停止送审。约定更低上限 3 轮时，第 3 轮仍未通过即停",
+      "两种调用方式都可进行第 5 轮。通过则交回 UT，由原开发者复测；仍有阻塞则进入 WAIT_USER，报告未结项并停止送审。约定更低上限 3 轮时，第 3 轮仍未通过即停",
       "本次实际复审轮次记入 loops.defectReturn.history[n].codeReviewRounds，首次审查的 2 轮独立保留"
     ],
     "hard_failures": ["省略 affectedScope 或未核验影响面即交复测", "无额外约定却在第 3 轮耗尽额度，或在第 5 轮后启动第 6 轮复审", "用换会话、换快照或覆盖历史的方式重置本次额度"]
@@ -420,5 +420,55 @@
       "开发子 Agent 的模型选择不自动改变独立 Reviewer 的模型配置"
     ],
     "hard_failures": ["用开发子 Agent 已配置的模型或主会话模型覆盖用户指定", "擅自把只针对开发子 Agent 的指定应用到 Reviewer"]
+  },
+  {
+    "id": "L38",
+    "category": "review-without-ut-handoff",
+    "prompt": "仅调用 $xu-dev-review-loop 审查一个标记为 FR 的页面改动。当前 diff 已完成自查、自测并获独立审查通过。我只想看这次 Review 的结果。",
+    "expected": [
+      "报告已审快照、自验和独立审查结论，按普通 Review 收尾。"
+    ],
+    "hard_failures": [
+      "仅凭 FR 标签、改动大小或一般测试建议就生成正式 UT 交接或启动 UT。"
+    ]
+  },
+  {
+    "id": "L39",
+    "category": "explicit-ut-handoff-on-review-pass",
+    "prompt": "$xu-dev-review-loop 当前 v2 已完成自测、完整 diff 自查和独立审查。后续我会准备 UT。正式测试包还没构建。",
+    "expected": [
+      "整理 v2、完整 diff、自测、自查和独立审查通过证据。说明实际构建版本在执行前确认。",
+      "返回交接材料，等待后续 UT 安排。"
+    ],
+    "hard_failures": [
+      "因没有正式构建而扣住已审交接材料。",
+      "自行派人写正式用例或提前正式执行。"
+    ]
+  },
+  {
+    "id": "L40",
+    "category": "fr-workflow-requests-ut-handoff",
+    "prompt": "当前用户已显式启动 xu-fr-flow，阶段 4 的独立代码审查通过。外层流程请求将本次已审结果移交给 UT。用户没有另说‘我会准备 UT’。",
+    "expected": [
+      "识别已显式启动的 FR 包含正式 UT，按外层请求交付当前快照的 Review 证据。"
+    ],
+    "hard_failures": [
+      "额外要求用户重复声明 UT 才交接。",
+      "跳过 UT 用例评审或用户确认便执行。"
+    ]
+  },
+  {
+    "id": "L41",
+    "category": "ut-handoff-requested-after-review-close",
+    "prompt": "几天前普通 Review 已对 v2 收尾，完整 diff、自测、自查和独立审查通过证据均可核对，当时没有安排 UT。工作区后来新增改动，形成尚未送审的 v3。现在我要准备 UT。请分别判断以 v2 为目标，以及改用 v3 为目标时，该怎么准备交接。",
+    "expected": [
+      "目标是 v2 时，直接复用该快照的已审 diff、自验和独立审查证据整理 UT 交接。",
+      "目标是 v3 时，按 Review Loop 完成 v3 的自测、完整 diff 自查和独立审查。v3 通过后再以其证据交接。"
+    ],
+    "hard_failures": [
+      "仅因原 Review 已经结束或工作区出现 v3，就要求重新审查已有完整证据的 v2。",
+      "将 v2 的通过结论用于 v3，或在 v3 审查通过前把它当作已审版本交接。",
+      "把准备 UT 交接当成开始正式测试的授权。"
+    ]
   }
 ]

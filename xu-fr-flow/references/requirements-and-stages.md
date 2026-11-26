@@ -33,7 +33,7 @@
 | `loops` | `validRounds`、`maxRounds`、`stagnationCount`、`openBlockers` | 记录内环轮次、停滞和未解阻塞 |
 | `loops.defectReturn` | `cycles`、`maxCycles`、`pendingReturn`、`history` | 记录批量回流与熔断 |
 | `utEntry` | `devSelfTest`、`devDiffSelfReview`、`codeReview` | 四项入口证据与对应快照 |
-| `qaHandoff` | 版本、`mandatorySummary`、`readyForQa`、`qaAccepted` | 汇总逐例状态与交接边界 |
+| `qaHandoff` | 版本、`executorRole`、`mandatorySummary`、`readyForQa`、`qaAccepted` | 汇总逐例状态与交接边界 |
 
 以下为省略未激活角色和未触达门禁的稀疏示例：
 
@@ -60,13 +60,14 @@
 ```
 
 - `meta.mode`：`standard` 或 `lite`；`lite` 可省略 `versions.design`，以 AB 替代 A／B，且五项红线均为 `false`。
-- `versions.testCasesStatus`：`pre-draft` 或 `formal`。
+- `versions.testCasesStatus`：`pre-draft` 或 `formal`，门禁 C 要求显式记录为 `formal`。
 - 同一 `contextScope` 下不同角色不得共用 `contextId`（含 `handoffs[]`）；续接只更新句柄。
 - 只读角色为 `enforced` 或 `verified-zero-write`，非只读角色为 `na`；降级须记录批准与一致的前后指纹。
 - 门禁状态：`pending`、`confirmed`、`waived`、`invalidated`。
 - 内环 `maxRounds` 为 1–20；`stagnationCount >= 2` 须停止汇报。
-  外环 `maxCycles` 为 1–10（默认 2），回流须整轮测完后批量触发。
-  `history[]` 记录 `fullRoundCompleted`、失败用例、影响面、Reviewer 核验与复测版本。每次回流的 `codeReviewRounds` 记录该次实际复审轮数，取值 1–5。
+  外环 `maxCycles` 按 `xu-dev-ut-loop`，回流须跑完当前轮次清单后批量触发。
+  批次刚发起时在 `history` 记录为 `active`，复审及复测证据齐全后记为 `completed`。
+  `history[]` 记录 `fullRoundCompleted`、失败用例、影响面、Reviewer 核验与复测快照和构建／设备版本。每次回流的 `codeReviewRounds` 记录按 `xu-dev-review-loop` 取得的实际复审轮数。
 - 仓库根目录提供 `scripts/validate-ledger.cjs`，按 `A | B | AB | C | ut-entry | qa-handoff` 校验。
 
 ## 角色与交接台账
@@ -95,4 +96,4 @@
 - 对应需求与设计版本、代码快照、用例版本及状态；验收条件到用例的覆盖表、正式用例。
 - 独立评审意见、答复及结论；用例人工确认及其版本。
 - 构建产物、环境和设备软件版本；逐项执行证据、缺陷、修复与复测记录。
-- QA 交接的已完成项、失败/受阻项、已知风险和证据位置。
+- QA 交接的执行角色（`executorRole` 对应入口开发者）、已完成项、失败／受阻项、已知风险和证据位置。

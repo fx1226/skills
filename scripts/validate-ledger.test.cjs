@@ -268,6 +268,43 @@ test("同角色续接刷新 runHandle/resumeHandle 但 contextId 不变时放行
   assert.equal(result.ok, true, JSON.stringify(result.errors));
 });
 
+test("研发 UT 以已绑定开发者完成交接，独立调用和 FR 使用各自的角色标识", () => {
+  const fr = makeStandardLedger();
+  delete fr.roles["fr-test-executor"];
+  fr.qaHandoff.executorRole = "fr-developer";
+  const options = { gate: "qa-handoff" };
+  const frResult = validateLedger(fr, options);
+  assert.equal(frResult.ok, true, JSON.stringify(frResult.errors));
+
+  const standalone = structuredClone(fr);
+  standalone.meta.standalone = true;
+  standalone.roles.developer = standalone.roles["fr-developer"];
+  delete standalone.roles["fr-developer"];
+  standalone.qaHandoff.executorRole = "developer";
+  const standaloneResult = validateLedger(standalone, options);
+  assert.equal(standaloneResult.ok, true, JSON.stringify(standaloneResult.errors));
+
+  fr.qaHandoff.executorRole = "fr-code-reviewer";
+  const wrongExecutor = validateLedger(fr, options);
+  assert.ok(wrongExecutor.errors.some((error) => error.code === "QA_EXECUTOR_ROLE_MISMATCH"));
+});
+
+test("用例评审前可通过 ut-entry，门禁 C 必须标记正式用例，构建留到执行阶段", () => {
+  const ledger = makeStandardLedger();
+  delete ledger.versions.buildOrDevice;
+  delete ledger.versions.testCasesStatus;
+
+  assert.equal(validateLedger(ledger, { gate: "ut-entry" }).ok, true);
+  const missingFormalStatus = validateLedger(ledger, { gate: "C" });
+  assert.ok(missingFormalStatus.errors.some((error) => error.code === "TEST_CASES_FORMAL_REQUIRED"));
+
+  ledger.versions.testCasesStatus = "formal";
+  assert.equal(validateLedger(ledger, { gate: "C" }).ok, true);
+  assert.ok(validateLedger(ledger, { gate: "qa-handoff" }).errors.some((error) =>
+    error.code === "VERSION_BUILD_OR_DEVICE_MISSING"
+  ));
+});
+
 test("独立 ut-entry 缺项或快照漂移被拦截；standalone 模式仅核对四项与角色隔离", () => {
   const missingDiffCheck = makeStandardLedger();
   missingDiffCheck.utEntry.devDiffSelfReview.passed = false;
@@ -409,6 +446,56 @@ test("两级只读合规性：拒绝口头降级、无批准降级与指纹漂�
   assert.equal(validResult.ok, true, JSON.stringify(validResult.errors));
 });
 
+test("进行中的缺陷批次可以交接，但完成复审和复测后才通过 QA 门禁", () => {
+  const ledger = makeStandardLedger();
+  const returned = ledger.loops.defectReturn;
+  returned.cycles = 1;
+  const batch = { cycle: 1, status: "active", fullRoundCompleted: true, failedCaseIds: ["UT-04"] };
+  returned.history.push(batch);
+
+  const inProgress = validateLedger(ledger, { gate: "ut-entry" });
+  assert.equal(inProgress.ok, true, JSON.stringify(inProgress.errors));
+  assert.ok(validateLedger(ledger, { gate: "qa-handoff" }).errors.some((error) =>
+    error.code === "DEFECT_HISTORY_STILL_ACTIVE"
+  ));
+
+  batch.fullRoundCompleted = false;
+  assert.ok(validateLedger(ledger, { gate: "ut-entry" }).errors.some((error) =>
+    error.code === "DEFECT_RETURN_MID_UT_ABORT_FORBIDDEN"
+  ));
+  batch.fullRoundCompleted = true;
+
+  batch.codeReviewRounds = 6;
+  assert.ok(validateLedger(ledger, { gate: "ut-entry" }).errors.some((error) =>
+    error.code === "DEFECT_HISTORY_REVIEW_ROUNDS_INVALID"
+  ));
+  batch.codeReviewRounds = 1;
+
+  batch.status = "completed";
+  assert.ok(validateLedger(ledger, { gate: "qa-handoff" }).errors.some((error) =>
+    error.code === "DEFECT_HISTORY_RETEST_SNAPSHOT_MISSING"
+  ));
+  Object.assign(batch, {
+    affectedScope: ["parser/retry.js"],
+    reviewerVerifiedScope: true,
+    codeReviewRounds: 1,
+    retestSnapshot: ledger.versions.codeSnapshot,
+    retestBuildOrDevice: ledger.versions.buildOrDevice,
+  });
+  assert.equal(validateLedger(ledger, { gate: "qa-handoff" }).ok, true);
+
+  returned.pendingReturn = true;
+  assert.ok(validateLedger(ledger, { gate: "qa-handoff" }).errors.some((error) =>
+    error.code === "DEFECT_RETURN_PENDING"
+  ));
+  returned.pendingReturn = false;
+
+  returned.cycles = 0;
+  assert.ok(validateLedger(ledger, { gate: "qa-handoff" }).errors.some((error) =>
+    error.code === "DEFECT_HISTORY_COUNT_MISMATCH"
+  ));
+});
+
 test("UT 缺陷回流外环熔断、affectedScope 核验与停滞计数校验", () => {
   const validDefectReturn = makeStandardLedger();
   validDefectReturn.versions.codeSnapshot = "git:def5678";
@@ -458,6 +545,18 @@ test("UT 缺陷回流外环熔断、affectedScope 核验与停滞计数校验", 
   const scopeRes = validateLedger(unverifiedScope, { gate: "qa-handoff" });
   assert.equal(scopeRes.ok, false);
   assert.ok(scopeRes.errors.some((item) => item.code === "DEFECT_HISTORY_SCOPE_UNVERIFIED"));
+
+  const developerRetest = structuredClone(validDefectReturn);
+  delete developerRetest.roles["fr-test-executor"];
+  developerRetest.qaHandoff.executorRole = "fr-developer";
+  const currentBuild = validateLedger(developerRetest, { gate: "qa-handoff" });
+  assert.equal(currentBuild.ok, true, JSON.stringify(currentBuild.errors));
+  developerRetest.loops.defectReturn.history[0].retestBuildOrDevice = "old-build";
+  const oldBuild = validateLedger(developerRetest, { gate: "qa-handoff" });
+  assert.ok(oldBuild.errors.some((error) => error.code === "DEFECT_RETEST_BUILD_MISMATCH"));
+  delete developerRetest.loops.defectReturn.history[0].retestBuildOrDevice;
+  const missingBuild = validateLedger(developerRetest, { gate: "qa-handoff" });
+  assert.ok(missingBuild.errors.some((error) => error.code === "DEFECT_RETEST_BUILD_MISMATCH"));
 
   const exceededCycles = structuredClone(validDefectReturn);
   exceededCycles.loops.defectReturn.cycles = 3;

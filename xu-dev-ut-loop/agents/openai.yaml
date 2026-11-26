@@ -1,4 +1,4 @@
 interface:
   display_name: "Xu Dev UT Loop"
-  short_description: "编排研发单元测试（UT）的用例设计、独立评审、执行与复测"
-  default_prompt: "使用 $xu-dev-ut-loop 核对代码审查入口，分派独立用例作者、只读 Reviewer 和测试执行者；经用户确认后整轮执行，汇总缺陷再批量回流并形成 QA 交接。"
+  short_description: "编排研发黑盒 UT 的用例设计、独立评审、开发执行与复测"
+  default_prompt: "使用 $xu-dev-ut-loop 基于已审快照编写并独立评审正式用例，经我确认后由原开发者整轮执行，汇总缺陷后批量回流并在新构建上复测。"
