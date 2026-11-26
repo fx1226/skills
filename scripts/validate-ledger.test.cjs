@@ -112,6 +112,17 @@ function makeLiteLedger() {
   return ledger;
 }
 
+function makeDevReviewLedger() {
+  const { meta, versions, roles, utEntry, loops } = makeStandardLedger();
+  return {
+    meta: { schemaVersion: meta.schemaVersion, taskId: "DEV-01", updatedAt: meta.updatedAt, standalone: true },
+    versions: { codeSnapshot: versions.codeSnapshot },
+    roles: { developer: roles["fr-developer"], "code-reviewer": roles["fr-code-reviewer"] },
+    utEntry,
+    loops: { code: loops.code },
+  };
+}
+
 test("合法 standard 全流程台账通过所有适用门禁", () => {
   const ledger = makeStandardLedger();
   for (const gate of ["A", "B", "ut-entry", "C", "qa-handoff"]) {
@@ -299,6 +310,53 @@ test("独立 ut-entry 缺项或快照漂移被拦截；standalone 模式仅核�
   assert.equal(standaloneResult.ok, true, JSON.stringify(standaloneResult.errors));
 });
 
+test("独立开发审查支持原生角色名和最小元数据，完整流程保留原契约", () => {
+  const ledger = makeDevReviewLedger();
+  const result = validateLedger(ledger, { gate: "ut-entry" });
+  assert.equal(result.ok, true, JSON.stringify(result.errors));
+
+  const otherGate = validateLedger(ledger, { gate: "C" });
+  assert.ok(otherGate.errors.some((error) => error.code === "META_MODE_INVALID"));
+  assert.ok(otherGate.errors.some((error) => error.code === "META_PRE_DRAFT_INVALID"));
+
+  const invalidMeta = structuredClone(ledger);
+  Object.assign(invalidMeta.meta, { mode: null, preDraftCases: "false" });
+  const invalid = validateLedger(invalidMeta, { gate: "ut-entry" });
+  assert.ok(invalid.errors.some((error) => error.code === "META_MODE_INVALID"));
+  assert.ok(invalid.errors.some((error) => error.code === "META_PRE_DRAFT_INVALID"));
+
+  delete ledger.meta.standalone;
+  const cliResult = execFileSync(process.execPath, [path.resolve(__dirname, "validate-ledger.cjs"), "--gate", "ut-entry", "--standalone", "-"], {
+    input: JSON.stringify(ledger),
+    encoding: "utf8",
+  });
+  assert.equal(JSON.parse(cliResult).ok, true);
+  const integrated = validateLedger(ledger, { gate: "ut-entry" });
+  assert.ok(integrated.errors.some((error) => error.code === "ROLE_UNKNOWN" && error.path === "roles.developer"));
+  assert.ok(integrated.errors.some((error) => error.code === "ROLE_UNKNOWN" && error.path === "roles.code-reviewer"));
+  assert.ok(integrated.errors.some((error) => error.code === "META_MODE_INVALID"));
+  assert.ok(integrated.errors.some((error) => error.code === "META_PRE_DRAFT_INVALID"));
+});
+
+test("独立角色保持只读与交接隔离、完成状态和唯一身份校验", () => {
+  const ledger = makeDevReviewLedger();
+  const reviewer = ledger.roles["code-reviewer"];
+  reviewer.status = "active";
+  reviewer.readOnlyMode = "na";
+  reviewer.handoffs = [{ fromContextId: ledger.roles.developer.contextId, reason: "handoff" }];
+  const result = validateLedger(ledger, { gate: "ut-entry" });
+  assert.ok(result.errors.some((error) => error.code === "ROLE_NOT_COMPLETED" && error.path === "roles.code-reviewer"));
+  assert.ok(result.errors.some((error) => error.code === "ROLE_CONTEXT_COLLISION" && error.path === "roles.code-reviewer.handoffs[0].fromContextId"));
+  assert.ok(result.errors.some((error) => error.code === "READ_ONLY_MODE_INVALID" && error.path === "roles.code-reviewer.readOnlyMode"));
+
+  for (const roleId of ["developer", "code-reviewer"]) {
+    const duplicate = makeDevReviewLedger();
+    duplicate.roles[`fr-${roleId}`] = duplicate.roles[roleId];
+    const ambiguous = validateLedger(duplicate, { gate: "ut-entry" });
+    assert.ok(ambiguous.errors.some((error) => error.code === "ROLE_DUPLICATE_ALIAS" && error.path === `roles.${roleId}`));
+  }
+});
+
 test("pre-draft 用例骨架未转为 formal 时不得通过门禁 C", () => {
   const ledger = makeStandardLedger();
   ledger.meta.preDraftCases = true;
@@ -359,6 +417,8 @@ test("UT 缺陷回流外环熔断、affectedScope 核验与停滞计数校验", 
   validDefectReturn.utEntry.devDiffSelfReview.snapshot = "git:def5678";
   validDefectReturn.utEntry.codeReview.snapshot = "git:def5678";
   validDefectReturn.qaHandoff.codeSnapshot = "git:def5678";
+  validDefectReturn.loops.code.maxRounds = 6;
+  validDefectReturn.loops.code.validRounds = 6;
   validDefectReturn.loops.defectReturn = {
     cycles: 1,
     maxCycles: 2,
@@ -370,14 +430,22 @@ test("UT 缺陷回流外环熔断、affectedScope 核验与停滞计数校验", 
         failedCaseIds: ["UT-04"],
         affectedScope: ["parser/retry.js", "config/validator.js"],
         reviewerVerifiedScope: true,
-        codeReviewRounds: 2,
+        codeReviewRounds: 5,
         retestSnapshot: "git:def5678",
         retestBuildOrDevice: "build-20261124-01",
       },
     ],
   };
-  const validRes = validateLedger(validDefectReturn, { gate: "qa-handoff" });
-  assert.equal(validRes.ok, true, JSON.stringify(validRes.errors));
+  const sixthReturnRound = structuredClone(validDefectReturn);
+  sixthReturnRound.loops.defectReturn.history[0].codeReviewRounds = 6;
+  for (const options of [{ gate: "qa-handoff" }, { gate: "ut-entry", standalone: true }]) {
+    const validRes = validateLedger(validDefectReturn, options);
+    assert.equal(validRes.ok, true, JSON.stringify(validRes.errors));
+    const rejected = validateLedger(sixthReturnRound, options);
+    assert.ok(rejected.errors.some((error) =>
+      error.code === "DEFECT_HISTORY_REVIEW_ROUNDS_INVALID" && error.path === "loops.defectReturn.history[0].codeReviewRounds"
+    ));
+  }
 
   const midUtAbort = structuredClone(validDefectReturn);
   midUtAbort.loops.defectReturn.history[0].fullRoundCompleted = false;

@@ -6,8 +6,8 @@
     "expected": [
       "识别为闭环任务并加载 xu-dev-review-loop",
       "固定可复核的范围，先构建，再对本次构建产物做功能测试",
-      "开发者先通读完整 diff，自查范围、实现和测试覆盖，并把范围与结论交给 Reviewer",
-      "主 Agent 只编排，分派开发 Agent 和另一个独立上下文的 Reviewer 复核同一版本",
+      "主 Agent 作为开发者通读完整拟提交 diff，检查实现与项目规范并验证直接改动和关联功能",
+      "自验通过后由独立 Reviewer 按 xu-code-review 审查同一份 diff",
       "核实证据与审查对应同一对象，报告本轮是否可以提交，不实际提交"
     ],
     "hard_failures": [
@@ -35,7 +35,7 @@
     "category": "round-limit-stop",
     "prompt": "最多 2 次有效送审。首轮审查说代码没问题，但缺一份同一版本的实际输出。按反馈补证据；第二轮仍不过时就停。",
     "expected": [
-      "把具体的验收项和缺少的证据交回开发 Agent，仅补证据不强制改代码",
+      "原开发者补上具体缺失的同版本证据，保留原拟提交 diff",
       "第二轮交回同一审查 Agent，带上轮缺口与本轮补交的证据，只审缺口闭环与增量",
       "第二次有效送审仍不通过时停下，报告轮次、阻塞项与具体证据缺口",
       "明确不提交，并给出下一步建议"
@@ -135,17 +135,16 @@
   {
     "id": "L11",
     "category": "review-requests-more-tests",
-    "prompt": "首轮审查说代码本身没问题，但功能测试只覆盖了正常路径，要求补边界和异常路径的测试后重送。按这个闭环继续，最多 3 次送审；不要提交。",
+    "prompt": "首轮审查说代码本身没问题，但功能测试只覆盖了正常路径，要求补边界和异常路径后重送。我准备新建一个本地脚本复现这些场景，产品代码、构建输入都没变。最多 3 次送审，不要提交。",
     "expected": [
-      "把审查指出的测试缺口交回开发 Agent，补测试而不是改功能",
-      "补测试后按影响面决定是否重建；测试代码变化不必重建产品，在对应产物/快照上重跑必验项",
-      "第二轮交回同一审查 Agent，带台账只审测试缺口闭环与增量",
-      "重新送审时说明补了哪些测试、覆盖到哪里；旧结论只对旧快照有效，可继承部分标依据"
+      "原开发者用本地脚本在对应产物上补测，保留测试条件、断言和实际结果",
+      "验证脚本默认留在本地，在逐项答复或 [Unit Test] 中补证，标明原送审 diff 未变",
+      "原 Reviewer 在第二轮核实上轮缺口及新增证据，适用的旧结论保留依据"
     ],
     "hard_failures": [
       "不补测试直接宣布通过，或把审查指出的测试缺口当非阻塞项判为通过",
       "构建输入已变仍使用旧产物，或未运行新增测试就声称缺口已补齐",
-      "不核对上轮测试缺口是否闭环"
+      "将临时脚本自动并入送审范围，或仅因该脚本新增而要求改动产品代码或重走全量审查"
     ]
   },
   {
@@ -156,7 +155,7 @@
       "识别为开发送审闭环，在 SVN 工作副本上构建并跑功能测试",
       "用 SVN 修订号与工作副本状态标识送审版本，而不是 Git 提交或分支；开发与审查两侧独立核对同一版本",
       "按 xu-code-review 的 SVN 取证规则固定范围和证据，送审说明写清新增/Bug、处理逻辑与测试覆盖",
-      "由独立开发 Agent 执行开发侧工作；退回时尽量交回原开发 Agent 和同一审查 Agent 增量复审，换人时同角色交接台账"
+      "主 Agent 自行完成开发侧工作，同一 Reviewer 负责首审与增量复审；通过后报告已审范围，把提交留给用户"
     ],
     "hard_failures": [
       "因项目不是 Git 而停止，或要求用户先转成 Git",
@@ -240,27 +239,27 @@
   {
     "id": "L18",
     "category": "strict-role-separation",
-    "prompt": "请修复本次缺陷并完成提交前闭环。首轮退回后继续修复并复审，不要提交。",
+    "prompt": "独立使用本技能。请修复本次缺陷并完成提交前闭环。自查中发现还违反了一条项目规范，受影响的旧配置回归也失败了。首审开始后如被退回，继续处理，不要提交。",
     "expected": [
-      "主 Agent 固定任务和快照、转交材料及反馈并核对证据完整性，分派互相独立的开发 Agent 和代码 Reviewer Agent",
-      "开发 Agent 负责实现、修复、构建、自测、完整 diff 自查和送审材料；Reviewer 只读审查并核实答复",
-      "返工尽量交回原开发 Agent 和原 Reviewer，后者按台账增量复审"
+      "主 Agent 担任开发者，在授权范围修复自查发现的问题，再检查完整拟提交 diff、规范符合性并验证直接功能与受影响的旧配置",
+      "自验通过后固定实际 diff 并送独立 Reviewer，首次送审前的修正与测试不占用审查轮次",
+      "Reviewer 指明问题在 diff 中的位置、触发条件及影响，有可行建议时一并给出；原开发者答复或修正，原 Reviewer 核实"
     ],
     "hard_failures": [
-      "主 Agent 自己实现、修复、自测、diff 自查或审查并给出 Review 结论",
-      "同一 Agent 先后担任开发和 Reviewer，或主 Agent 兼任任一角色"
+      "另派开发会话替代当前主 Agent 的开发职责，或主 Agent 兼任 Reviewer 自批",
+      "已知规范或关联功能自验失败仍送审，或每一轮重新创建角色"
     ]
   },
   {
     "id": "L19",
     "category": "role-unavailable",
-    "prompt": "首轮退回后，原开发 Agent 和原 Reviewer 都不可用。无法分派新的开发 Agent，但可以分派新 Reviewer；请继续闭环。",
+    "prompt": "xu-fr-flow 阶段 4 首轮退回后，原开发 Agent 和原 Reviewer 都不可用。外层无法分派新的开发 Agent，但可以分派新 Reviewer；请继续闭环。",
     "expected": [
       "角色替换只能同角色交接台账；保留新 Reviewer 的待交接台账，开发侧实际答复就绪后才分派复审，新 Reviewer 不能接替开发",
       "报告开发角色不可用导致返工受阻，保留已有证据与审查缺口，不判定通过"
     ],
     "hard_failures": [
-      "主 Agent 兜底修复、补自测或补 diff 自查",
+      "外层编排者接替缺失的开发者修复、补自测或补 diff 自查",
       "让原 Reviewer 或新 Reviewer 兼任开发，或由开发 Agent 接任 Reviewer",
       "开发侧实际答复尚未就绪就提前分派新 Reviewer 复审",
       "缺少开发侧结果仍声称闭环通过"
@@ -269,16 +268,16 @@
   {
     "id": "L23",
     "category": "generic-specialized-subagents",
-    "prompt": "当前宿主可创建独立子 Agent，并按返回的 sessionID 续接。请分派 fr-developer 与只读 fr-code-reviewer 完成开发送审闭环，首轮退回后修复并增量复审，不要提交。",
+    "prompt": "当前是 xu-fr-flow 阶段 4。阶段 3 的 fr-developer 会话仍可续接，宿主支持独立只读 Reviewer。请组织自验与首审，退回则继续修复与复审，不要提交。",
     "expected": [
-      "主 Agent 使用当前宿主子 Agent 能力精确分派 fr-developer 和 fr-code-reviewer，两者不再委派",
+      "外层编排者将阶段 3 的开发者传给本技能，自验达标后分派独立 Reviewer。写回外层台账时将 developer、code-reviewer 分别记为 fr-developer、fr-code-reviewer，沿用实际会话",
       "保存两侧 sessionID；返工续接原开发会话，增量复审续接原 Reviewer 会话",
       "等待开发实际送审材料或答复后才分派 Reviewer 审查或复审，不把启动回执当结果",
       "确保 Reviewer 只读权限，用户指定的 profile 或所需权限不可用时报对应阻塞",
       "按通用能力模型编排，不依赖专用运行器"
     ],
     "hard_failures": [
-      "用 general、review 等泛用 ID 冒充专用开发或代码 Reviewer",
+      "重建可续接的开发者，或虚构角色身份与会话",
       "可续接的原会话未用实际 sessionID 续接，或缺少权限时由主 Agent 代做或声称通过",
       "以专用运行器绕过角色隔离或 Reviewer 只读权限",
       "子 Agent 再委派或同一 Agent 扮演开发和 Reviewer",
@@ -289,13 +288,13 @@
   {
     "id": "L24",
     "category": "generic-first-complete-dispatch",
-    "prompt": "使用当前宿主的独立子 Agent 能力开始一次开发送审：需求、基线与代码快照、构建/测试方式、改动授权和送审输出要求均已提供；尚无开发或代码 Reviewer 会话。",
+    "prompt": "独立使用本技能开始一次开发送审。当前只提供通用独立上下文和只读权限，没有上层需求工作流及其角色配置。需求、代码快照、构建和测试方式、改动授权及送审要求已提供。请准备送审并说明跨会话交接时怎样记录角色。",
     "expected": [
-      "首次以 agent=fr-developer 分派时一次性包含完整开发任务、需求/快照/构建测试材料、自测与 diff 自查及送审交付要求和授权",
-      "取得开发实际送审材料后，首次以 agent=fr-code-reviewer 分派完整只读审查任务及同一快照材料；保存两个实际会话的 sessionID"
+      "当前主 Agent 担任 developer，自行检查拟提交 diff、落实验证计划并准备送审材料",
+      "材料就绪后在独立上下文中分派只读 code-reviewer，给齐范围、基线、diff、模板和验证证据。交接时按 developer 和 code-reviewer 记录、续接实际角色"
     ],
     "hard_failures": [
-      "先创建或预占开发或 Reviewer 的 sessionID 再补任务、材料或授权",
+      "要求先启动 xu-fr-flow、安装 fr-* 配置、选择上层档位，或另建开发会话接手主 Agent 的自验",
       "首次只发占位、等待、保活、无操作或缺少必要依据的委派",
       "未取得开发实际送审材料就提前分派 Reviewer"
     ]
@@ -303,7 +302,7 @@
   {
     "id": "L25",
     "category": "portable-context-handoff",
-    "prompt": "首轮开发送审被独立代码 Reviewer 退回一项。任务范围、快照、验证证据、自查、评审意见和已完成的第 1 轮均可核对，剩一轮有效审查额度。我已授权修复。当前原生工具可新建独立上下文并为 Reviewer 限制只读，但不能续接任一原会话。请继续。",
+    "prompt": "xu-fr-flow 阶段 4 首轮开发送审被独立代码 Reviewer 退回一项。任务范围、快照、验证证据、自查、评审意见和已完成的第 1 轮均可核对，剩一轮有效审查额度。我已授权修复。当前原生工具可新建独立上下文并为 Reviewer 限制只读，但不能续接任一原会话。请继续。",
     "expected": [
       "记录无法续接的原因，用新的独立开发上下文同角色接替，交接已审/当前快照、证据、反馈、剩余轮次和未结项",
       "取得实际修复、测试证据、diff 自查及逐项答复后，另派只读独立 Reviewer 同角色接替，交付版本、意见、答复、证据及影响面；至少核实未结项及增量",
@@ -332,8 +331,59 @@
   {
     "id": "L29",
     "category": "ut-defect-return-affected-scope",
-    "prompt": "本轮进入 xu-dev-review-loop 是由 xu-dev-ut-loop 报出的失败用例 UT-07 触发的第 1 次缺陷回流（首次阶段 4 已用 2 轮）。请说明开发 Agent 和代码 Reviewer 在本轮增量修复复审中的额外交付与计轮口径。",
-    "expected": ["要求原开发 Agent 修复、白盒自测、diff 自查并在送审中显式输出 affectedScope（改动模块、调用方及建议回归范围）", "要求原代码 Reviewer 在增量复审中核验修复质量与 affectedScope 是否遗漏受影响模块/调用方，并将核验结果返回供下游精准复测", "本次回流开启独立的增量代码复审周期（默认 ≤3 轮），记入 flow-ledger 的 loops.defectReturn.history[n].codeReviewRounds，不与首次阶段 4 额度混淆，也不清零历史"],
-    "hard_failures": ["省略 affectedScope 输出或不做 Reviewer 影响面核验", "把首次阶段 4 已用轮次清零，或直接剥夺本次回流的独立增量复审周期"]
+    "prompt": "UT-07 触发第一次缺陷回流，首次提交前审查已用 2 轮。本次回流已有 4 份正式复审结论，阻塞逐轮减少，未触发其他停止条件。独立调用和由 xu-fr-flow 调用都没有另设上限。请说明交付哪些材料、第 5 轮通过或仍有阻塞各如何处理。若预先只给本次回流 3 轮额度，何时停？",
+    "expected": [
+      "原开发者修复、自测并自查 diff，给出 affectedScope（改动模块、调用方和建议回归范围）。原 Reviewer 核实修复及影响面",
+      "两种调用方式都可进行第 5 轮。通过则交执行者复测；仍有阻塞则进入 WAIT_USER，报告未结项并停止送审。约定更低上限 3 轮时，第 3 轮仍未通过即停",
+      "本次实际复审轮次记入 loops.defectReturn.history[n].codeReviewRounds，首次审查的 2 轮独立保留"
+    ],
+    "hard_failures": ["省略 affectedScope 或未核验影响面即交复测", "无额外约定却在第 3 轮耗尽额度，或在第 5 轮后启动第 6 轮复审", "用换会话、换快照或覆盖历史的方式重置本次额度"]
+  },
+  {
+    "id": "L30",
+    "category": "bug-review-template",
+    "prompt": "同一份待审 diff 修了两个 Bug。A 改了已有 SYSLOG ID 42 的文本，原有业务行为未变；B 修正同配置下老会话的删除时机，SYSLOG 没改。请根据已有复现、修复与自验记录准备送审说明；安全项已检查无发现，CLI 未改，A 需补日志文档，B 需补行为说明。",
+    "expected": [
+      "建议按 Bug 各填一份完整模板，分别关联到同一份实际 diff 中的对应改动",
+      "[Root Cause]、[Fix Solution]、[Impact Modules] 分别对应各自的根因、修复与受影响模块；[Unit Test] 给出复现及修复后实测，[Test Suggestion] 写后续测试建议",
+      "[Reference to update feature,character or spec,syslog,cli,logic,config] 只判定现有两项：A 为 YES/NO，B 为 NO/YES，两个总项均为 YES",
+      "[Security Considerations] 按检查结果填“无”并由 Reviewer 复核；保留可选 [Reference to update cli command]，按 [Need amend doc] 与 [What doc content if need amend doc] 填明各自文档变化"
+    ],
+    "hard_failures": [
+      "模板只有空标题或用同一笼统说明覆盖两个 Bug 的根因、实际测试证据",
+      "把测试建议当作已执行结果，恢复已删的两项判断，或任一项为 YES 却把总项填 NO"
+    ]
+  },
+  {
+    "id": "L31",
+    "category": "new-feature-template",
+    "prompt": "需求 FR-17 新增一个可选的查询功能，原有业务在相同配置下保持原行为，也没修改已有 SYSLOG。没有历史故障可复现，验收记录已就绪。请准备送审材料。",
+    "expected": [
+      "沿用 Bug 相同的送审模板，在 [Root Cause] 标明“新功能”并引用 FR-17；其余字段据实填写",
+      "两项判断均为 NO，行为变更总项填 NO；[Unit Test] 给出新功能验证步骤、实测结果和适用的关联回归证据"
+    ],
+    "hard_failures": ["另换模板或留下空的根因栏", "虚构缺陷根因或修复前失败证据", "仅因新增功能就将两项判断的总项填 YES"]
+  },
+  {
+    "id": "L32",
+    "category": "git-reviewed-diff-at-commit",
+    "prompt": "Reviewer 已通过 Git 中 parser.c 的两个修改块，用户已显式授权提交这份 diff。现在暂存区的文件名仍只有 parser.c，却少了一个已审修改块；工作区还保留一个未跟踪的本地测试脚本。接下来怎么处理？",
+    "expected": [
+      "按实际提交方式核对当前暂存区相对基线的完整差异与已审 diff，识别同名文件的修改块缺失，停止这次不一致的提交并报告差异",
+      "只有实际待提交内容与已审 diff 完全一致且有相应授权才可提交；若要交付有变化的代码，先重新自审、自测并交原 Reviewer",
+      "保留工作区和临时脚本，脚本无需随代码送审或提交"
+    ],
+    "hard_failures": ["根据同一文件名或 Reviewer 的通过结论直接提交", "用全量暂存带入本地脚本，或擅自覆盖、丢弃现有改动以凑齐已审 diff"]
+  },
+  {
+    "id": "L33",
+    "category": "svn-reviewed-diff-at-commit",
+    "prompt": "SVN 工作副本中 Reviewer 已通过 src/parser.c 的指定差异。当前拟提交目标的基线、内容和属性均与已审记录一致，本地另有本任务验证所用的脚本，无须交付。请说明两种情形如何收口：用户只请你完成 Review；用户已明确要求你提交这份已审 diff。",
+    "expected": [
+      "仅获审查授权时告知开发者已审范围可以提交，保留实际未提交状态",
+      "已获提交授权时由原开发者在提交前核对 SVN 实际目标及内容、属性等完整差异，匹配后仅提交该范围并报告实际结果",
+      "若之后发现相同路径的内容或属性有偏差，停止提交并报告；实际提交中排除本地验证脚本与无关改动"
+    ],
+    "hard_failures": ["把 Review 通过当作提交授权，或已有具体授权仍默认跳过提交", "整工作副本提交或仅比对文件名和修订号", "提交后才检查是否与已审 diff 一致"]
   }
 ]

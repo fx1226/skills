@@ -4,6 +4,7 @@
 const fs = require("node:fs");
 
 const VALID_GATES = ["A", "B", "AB", "C", "ut-entry", "qa-handoff"];
+const DEV_REVIEW_ROLES = ["developer", "code-reviewer"];
 const LOGICAL_ROLES = [
   "fr-requirements",
   "fr-designer",
@@ -64,11 +65,11 @@ function registerContextClaim(claims, roleId, contextScope, contextId, fieldPath
   }
 }
 
-function validateMeta(ledger, errors) {
+function validateMeta(ledger, standaloneUtEntry, errors) {
   const meta = ledger.meta;
   if (!isPlainObject(meta)) {
     addError(errors, "META_MISSING", "meta", "Ledger must include a meta object");
-    return { mode: null, standalone: false };
+    return null;
   }
   if (meta.schemaVersion !== 1) {
     addError(errors, "SCHEMA_VERSION_INVALID", "meta.schemaVersion", "meta.schemaVersion must be integer 1");
@@ -76,10 +77,10 @@ function validateMeta(ledger, errors) {
   if (!isNonEmptyString(meta.taskId)) {
     addError(errors, "META_TASK_ID_MISSING", "meta.taskId", "meta.taskId must be a non-empty string");
   }
-  if (meta.mode !== "standard" && meta.mode !== "lite") {
+  if (meta.mode !== "standard" && meta.mode !== "lite" && !(standaloneUtEntry && meta.mode === undefined)) {
     addError(errors, "META_MODE_INVALID", "meta.mode", 'meta.mode must be "standard" or "lite"');
   }
-  if (typeof meta.preDraftCases !== "boolean") {
+  if (typeof meta.preDraftCases !== "boolean" && !(standaloneUtEntry && meta.preDraftCases === undefined)) {
     addError(errors, "META_PRE_DRAFT_INVALID", "meta.preDraftCases", "meta.preDraftCases must be a boolean");
   }
   if (!isNonEmptyString(meta.updatedAt)) {
@@ -133,7 +134,7 @@ function validateMeta(ledger, errors) {
     }
   }
 
-  return { mode: meta.mode, standalone: meta.standalone === true };
+  return meta.mode;
 }
 
 function validateVersions(ledger, errors) {
@@ -158,7 +159,7 @@ function validateVersions(ledger, errors) {
   return versions;
 }
 
-function validateRoles(ledger, errors) {
+function validateRoles(ledger, standalone, errors) {
   const roles = ledger.roles;
   if (!isPlainObject(roles)) {
     addError(errors, "ROLES_MISSING", "roles", "Ledger must include a roles object");
@@ -169,7 +170,12 @@ function validateRoles(ledger, errors) {
 
   for (const [roleId, roleRecord] of Object.entries(roles)) {
     const basePath = `roles.${roleId}`;
-    if (!LOGICAL_ROLES.includes(roleId)) {
+    const isLocalRole = standalone && DEV_REVIEW_ROLES.includes(roleId);
+    const flowRoleId = isLocalRole ? `fr-${roleId}` : roleId;
+    if (isLocalRole && Object.hasOwn(roles, flowRoleId)) {
+      addError(errors, "ROLE_DUPLICATE_ALIAS", basePath, `Roles "${roleId}" and "${flowRoleId}" identify the same logical role`);
+    }
+    if (!LOGICAL_ROLES.includes(flowRoleId)) {
       addError(errors, "ROLE_UNKNOWN", basePath, `Unknown logical role "${roleId}"`);
       continue;
     }
@@ -216,7 +222,7 @@ function validateRoles(ledger, errors) {
         if (roleRecord.resumeHandle !== undefined && roleRecord.resumeHandle !== null && !isNonEmptyString(roleRecord.resumeHandle)) {
           addError(errors, "ROLE_RESUME_HANDLE_INVALID", `${basePath}.resumeHandle`, "resumeHandle must be null or a non-empty string");
         }
-        if (READ_ONLY_ROLES.includes(roleId)) {
+        if (READ_ONLY_ROLES.includes(flowRoleId)) {
           validateReadOnlyRole(roleId, roleRecord, basePath, errors);
         } else if (roleRecord.readOnlyMode !== undefined && !VALID_READ_ONLY_MODES.includes(roleRecord.readOnlyMode)) {
           addError(errors, "READ_ONLY_MODE_INVALID", `${basePath}.readOnlyMode`, `Invalid readOnlyMode "${roleRecord.readOnlyMode}"`);
@@ -463,12 +469,12 @@ function validateLoops(ledger, errors) {
               "Code reviewer must verify affectedScope (reviewerVerifiedScope: true)"
             );
           }
-          if (!isIntInRange(entry.codeReviewRounds, 1, 20)) {
+          if (!isIntInRange(entry.codeReviewRounds, 1, 5)) {
             addError(
               errors,
               "DEFECT_HISTORY_REVIEW_ROUNDS_INVALID",
               `${itemPath}.codeReviewRounds`,
-              "codeReviewRounds must be an integer between 1 and 20"
+              "codeReviewRounds must be an integer between 1 and 5"
             );
           }
           if (!isNonEmptyString(entry.retestSnapshot)) {
@@ -607,8 +613,11 @@ function checkUtEntry(ledger, context, errors) {
   if (!isNonEmptyString(snapshot)) {
     addError(errors, "VERSION_CODE_SNAPSHOT_MISSING", "versions.codeSnapshot", "versions.codeSnapshot must be non-empty for ut-entry");
   }
-  requireRoleCompleted(context.roles, "fr-developer", errors);
-  requireRoleCompleted(context.roles, "fr-code-reviewer", errors);
+  for (const localId of DEV_REVIEW_ROLES) {
+    const flowId = `fr-${localId}`;
+    const roleId = context.standalone && !Object.hasOwn(context.roles, flowId) ? localId : flowId;
+    requireRoleCompleted(context.roles, roleId, errors);
+  }
 
   const utEntry = ledger.utEntry;
   if (!isPlainObject(utEntry)) {
@@ -796,13 +805,14 @@ function validateLedger(ledger, options = {}) {
     return { ok: false, gate, errors, warnings };
   }
 
-  const metaInfo = validateMeta(ledger, errors);
+  const standalone = Boolean(options.standalone || ledger.meta?.standalone === true);
+  const mode = validateMeta(ledger, standalone && gate === "ut-entry", errors);
   const versions = validateVersions(ledger, errors);
-  const roles = validateRoles(ledger, errors);
+  const roles = validateRoles(ledger, standalone, errors);
   const loops = validateLoops(ledger, errors);
   const context = {
-    mode: metaInfo.mode,
-    standalone: Boolean(options.standalone || metaInfo.standalone),
+    mode,
+    standalone,
     versions,
     roles,
     loops,

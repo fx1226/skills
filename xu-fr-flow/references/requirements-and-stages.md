@@ -66,7 +66,7 @@
 - 门禁状态：`pending`、`confirmed`、`waived`、`invalidated`。
 - 内环 `maxRounds` 为 1–20；`stagnationCount >= 2` 须停止汇报。
   外环 `maxCycles` 为 1–10（默认 2），回流须整轮测完后批量触发。
-  `history[]` 记录 `fullRoundCompleted`、失败用例、影响面、Reviewer 核验、复审轮次与复测版本。
+  `history[]` 记录 `fullRoundCompleted`、失败用例、影响面、Reviewer 核验与复测版本。每次回流的 `codeReviewRounds` 记录该次实际复审轮数，取值 1–5。
 - 仓库根目录提供 `scripts/validate-ledger.cjs`，按 `A | B | AB | C | ut-entry | qa-handoff` 校验。
 
 ## 角色与交接台账
