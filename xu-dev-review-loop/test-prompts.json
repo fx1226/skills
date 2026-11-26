@@ -389,7 +389,7 @@
   {
     "id": "L34",
     "category": "parallel-projects",
-    "prompt": "项目 A（${REPO_A}）和项目 B（${REPO_B}）各有一份改动要准备提交，目标和验证方式都在各自仓库。并行跑提交前审查，退回就按授权修好继续。A 已明确授权提交最终审过的 diff，B 只审不提交。宿主能提供同模型配置的开发子 Agent 和独立只读 Reviewer。",
+    "prompt": "项目 A（${REPO_A}）和项目 B（${REPO_B}）各有一份改动要准备提交，目标和验证方式都在各自仓库。并行跑提交前审查，退回就按授权修好继续。A 已明确授权提交最终审过的 diff，B 只审不提交。用户未指定模型，开发子 Agent 无模型配置；宿主支持继承主会话模型，也能提供独立只读 Reviewer。",
     "expected": [
       "无需另行确认，按项目各派一个开发子 Agent，并使用与主会话一致的提供方、模型和已选变体；主 Agent 仅统筹、分派、转交和汇报",
       "每个项目自行固定快照、完成自审自测并逐项答复；主 Agent 收到该项目真实送审材料才分派该项目独立只读 Reviewer，不等待另一项目",
@@ -400,5 +400,25 @@
       "默认改用其他模型或变体，或让开发子 Agent 自行分派 Reviewer",
       "串用不同项目的快照、证据、轮次或提交授权"
     ]
+  },
+  {
+    "id": "L35",
+    "category": "parallel-projects-configured-model",
+    "prompt": "请并行跑项目 A（${REPO_A}）、B（${REPO_B}）和 C（${REPO_C}）的提交前审查。任务、权限和验证范围都已明确。用户未指定模型；宿主的开发子 Agent 已配置 provider-dev/model-dev，与主会话的 provider-main/model-main 不同。宿主不传模型覆盖项时会使用子 Agent 的配置。",
+    "expected": [
+      "不另行询问，按项目各启动一个开发子 Agent，三个并行；保留现有 provider-dev/model-dev 配置，不传模型覆盖项",
+      "主 Agent 只统筹，每个项目自验和送审材料就绪后才单独分派其独立只读 Reviewer"
+    ],
+    "hard_failures": ["用主会话模型覆盖已有配置", "要求用户确认默认模型、顺序派工或让同一开发子 Agent 负责多个项目"]
+  },
+  {
+    "id": "L36",
+    "category": "parallel-projects-user-model-override",
+    "prompt": "并行跑项目 A（${REPO_A}）与 B（${REPO_B}）的提交前审查。用户明确要求这两个项目的开发子 Agent 都使用 provider-user/model-user；宿主支持覆盖模型。开发子 Agent 已配置 provider-dev/model-dev，主会话使用 provider-main/model-main。",
+    "expected": [
+      "按项目各并行启动一个开发子 Agent，均按用户指定使用 provider-user/model-user",
+      "开发子 Agent 的模型选择不自动改变独立 Reviewer 的模型配置"
+    ],
+    "hard_failures": ["用开发子 Agent 已配置的模型或主会话模型覆盖用户指定", "擅自把只针对开发子 Agent 的指定应用到 Reviewer"]
   }
 ]
