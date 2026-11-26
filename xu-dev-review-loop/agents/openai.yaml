@@ -1,4 +1,4 @@
 interface:
   display_name: "Xu Dev Review Loop"
   short_description: "开发者自审自测后按模板送审，由同一独立 Reviewer 核实到指定 diff 通过"
-  default_prompt: "使用 $xu-dev-review-loop 担任开发者，完成代码与规范自查、功能验证和关联回归，按模板送交固定的独立 Reviewer，向我报告哪份 diff 已通过。"
+  default_prompt: "使用 $xu-dev-review-loop 完成提交前审查：按项目分派规则组织自查、功能验证和关联回归，按模板送交固定的独立 Reviewer，向我报告哪份 diff 已通过。"
