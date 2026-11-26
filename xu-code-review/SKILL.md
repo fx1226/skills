@@ -1,6 +1,6 @@
 ---
 name: xu-code-review
-description: "代码审查：用于 Git 分支、提交、PR、未提交改动，SVN 工作副本、修订区间，以及指定文件或补丁的 review。按规范、需求、可靠性与安全取证，输出风险分级和验证缺口。"
+description: "代码审查：审查 SVN 工作副本、changelist、修订和分支合入，Git 暂存或未暂存改动、提交、分支和 PR，以及指定文件或补丁。按规范、需求、可靠性与安全取证。"
 ---
 
 # xu-code-review
@@ -18,7 +18,7 @@ description: "代码审查：用于 Git 分支、提交、PR、未提交改动�
 
 ### 1. 固定范围与证据
 
-先读 [scope-and-evidence.md](references/scope-and-evidence.md)，按 Git、SVN 或文件／补丁分支固定范围；再读 [calibration-and-reporting.md](references/calibration-and-reporting.md)，明确缺陷门槛和验证边界。
+先按[范围与证据](references/scope-and-evidence.md)确定目标。SVN 审查读取 [SVN 取证规则](references/svn-scope.md)，Git 审查读取 [Git 取证规则](references/git-scope.md)。用同一份被审快照核对改动、调用方及测试，再按[报告契约](references/calibration-and-reporting.md)校准结论。
 
 记录：
 - 目标仓库／路径、范围模式、方向、解析后的端点，以及工作区原始状态。
@@ -31,11 +31,11 @@ description: "代码审查：用于 Git 分支、提交、PR、未提交改动�
 
 ### 2. 建立覆盖图与风险路由
 
-读取 [review-dimensions.md](references/review-dimensions.md)。对每个变更路径先识别职责、调用方、数据流和行为变化，再标记适用维度与风险触发器。
+读取 [review-dimensions.md](references/review-dimensions.md)。对每个变更路径先说明可观察行为的前后差异。涉及共享契约时，按其中的“追踪受影响的入口”核对调用方和数据使用方，再选择适用维度。
 
 按触发器读取 [risk-checklists.md](references/risk-checklists.md) 的对应章节；涉及接口、职责、重复逻辑或抽象取舍时，再读 [design-smells.md](references/design-smells.md)。语言与领域专项规范按项目和当前环境加载，通用清单不替代语言语义。
 
-覆盖记录至少包含：路径／节点、变化类型、已读上下文、适用风险、结论或未覆盖原因。多个相同机制的文件可合并记录，但须能还原到具体路径。
+覆盖记录至少包含：路径／节点、变化类型、已读上下文、适用风险、结论或未覆盖原因。共享契约的上下文应能定位到受影响的入口。行为和保护条件相同的路径可合并，保留各路径的定位。
 
 **完成条件**：每个路径有覆盖状态；每个适用的高影响风险有证据、待验证条件或明确缺口，而非只写“已检查”。
 
@@ -54,7 +54,7 @@ description: "代码审查：用于 Git 分支、提交、PR、未提交改动�
 
 在风险节点追问：极值或空输入怎样？这里失败怎样？重复或同时发生怎样？超时后结果未知怎样？新旧版本共存怎样？
 
-扩读足以证明因果链的调用方、数据结构、配置、测试和历史前态。既有问题只有被本次变更新增、加剧或激活才计入本轮 findings；无关的重要旧问题单列范围外观察。
+扩读足以证明因果链的调用方、数据结构、配置、测试和历史前态。根据[缺陷门槛](references/calibration-and-reporting.md#缺陷门槛)，按本次审查的是变更还是当前快照确定 findings 的归属。
 
 **完成条件**：三轴分别有证据性结论；每个候选缺陷已说明触发条件、预期／实际差异及影响，纯偏好不占据缺陷列表。
 

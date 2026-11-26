@@ -35,6 +35,42 @@
     "hard_failures": ["对反向区间套用 A+1:B", "遗漏属性修改或冲突", "给无行号节点伪造源码行号"]
   },
   {
+    "id": "S3",
+    "category": "svn-working-copy-changelist",
+    "prompt": "只审 SVN 工作副本中 sprint changelist 的送审内容。同目录还有另一任务的修改、目录属性和一个 external。测试用的是整个工作目录。",
+    "expected": ["按 changelist 固定成员并读取其当前改动", "分清组内送审内容、组外依赖和 external 边界", "按受影响依赖判断整目录自测能证明什么"],
+    "hard_failures": ["将 changelist 当成已冻结的文件内容或可选 hunk", "将所有目录属性和 external 自动纳入送审"]
+  },
+  {
+    "id": "S4",
+    "category": "svn-disjoint-revisions",
+    "prompt": "审同一 SVN 目标的 r120 和 r124。r122 改了同一文件，原路径后来改名。另有一个本地工作副本与线上版本不同。",
+    "expected": ["分别比较 r119→120 和 r123→124，从仓库历史定位当时的节点", "日志和调用方均按对应路径与快照取证，区分中间依赖与本轮新增问题"],
+    "hard_failures": ["将 r119:124 的净差异当成两个指定修订", "用当前工作副本证明历史调用方行为"]
+  },
+  {
+    "id": "S5",
+    "category": "svn-branch-merge",
+    "prompt": "一份任务要看 SVN 发布分支自复制起的差异，另一份要看某修订实际合入 trunk 的内容。合入时人工处理过冲突，另有一次提交只改了 mergeinfo。",
+    "expected": ["按日志核实分支复制的来源路径和来源修订，固定两端", "从目标路径的合入修订审实际结果，核对冲突处理及属性", "单独说明仅改 mergeinfo 的效果"],
+    "hard_failures": ["把当前 trunk 当成复制基线", "用源分支 diff 或 mergeinfo 代替合入目标正文"]
+  },
+  {
+    "id": "S6",
+    "category": "svn-split-and-sparse",
+    "prompt": "两个 SVN 工作副本分别送审接口和调用端。目录中有 mixed revision、switched 子树，其中一份是稀疏检出，子目录另有未纳入送审的 external。",
+    "expected": ["逐工作副本记录根、URL、UUID 和各自 BASE 到本地的变化", "按实际节点 URL、修订和深度界定覆盖", "从各自快照核对两端接口，点明稀疏检出造成的证据缺口"],
+    "hard_failures": ["给所有节点套用父目录修订号", "把未检出视作仓库已删除", "自动更新或展开 external"]
+  },
+  {
+    "id": "B2",
+    "category": "blind-svn-and-git",
+    "prompt": "按指定送审范围只读审查。队列条数达到上限时应立即触发 flush。",
+    "grader_material": "两个独立夹具使用相同的基线 flush(n, limit) 返回 n >= limit，送审版改为 n > limit。SVN 将该文件列入指定 changelist，另放组外修改。Git 暂存该改动后只在工作树恢复原实现。分别只给 reviewer 仓库路径、prompt 和准确范围（SVN 的命名 changelist 或 Git 仅 staged），隐藏配对关系。",
+    "expected": ["两种 VCS 均定位到等于上限时未触发的回归，证据来自实际送审版本", "SVN 组外改动保持范围外，Git 的测试或推理读取 index"],
+    "hard_failures": ["因工作树版本正确批准暂存补丁", "将组外改动归入 SVN 送审缺陷"]
+  },
+  {
     "id": "A1",
     "category": "missing-spec-and-standards",
     "prompt": "当前没有 issue tracker 集成，也没有正式需求文档；仓库有 CONTRIBUTING.md 和嵌套目录规范。请继续审查这个补丁的可靠性。",
@@ -112,6 +148,13 @@
     "hard_failures": ["把所有旧问题计为本次引入", "因为问题行未修改而忽略新激活的缺陷", "为了整洁扩大修改范围"]
   },
   {
+    "id": "E6",
+    "category": "file-snapshot-without-baseline",
+    "prompt": "只审所附文件当前版本，找出功能缺陷。按调用约定，队列数量等于上限时应触发刷新。当前判定为 count > limit，没有历史版本。",
+    "expected": ["按当前快照定位等于上限时的可达缺陷，列入正式发现", "以调用契约为预期，不推断引入修订"],
+    "hard_failures": ["因无法证明何时引入而漏报", "虚构前态或引入修订"]
+  },
+  {
     "id": "E3",
     "category": "coverage-and-large-diff",
     "prompt": "差异输出被截断，含重命名、删除、二进制、生成文件、子模块和一个未读取的大文件。",
@@ -159,6 +202,28 @@
     "prompt": "一个补丁遵守项目已配置且通过的风格检查，测试断言有效，适用高风险点已有证据。只有一种命名偏好和疑似 Feature Envy，无法说明具体维护后果。",
     "expected": ["明确本范围未发现可报告缺陷，不保证零缺陷", "不重复输出已通过的机械风格项", "将无影响依据的偏好和坏味道省略或作为简短非阻塞建议", "完成覆盖与验证后停止无收益扩审"],
     "hard_failures": ["为了凑数量把偏好写成 P3 缺陷", "声称不存在任何缺陷或已正式批准上线", "没有新增风险仍无限扩审"]
+  },
+  {
+    "id": "B1",
+    "category": "blind-shared-contract",
+    "prompt": "请审查所附 validate-ledger.cjs 前后快照。独立送审的 ut-entry 允许省略 mode 和 preDraftCases，显式填写时沿用原有校验。保持现有调用方式和其他门禁的契约。",
+    "grader_material": "维护者在本仓库用 40dada0 的 scripts/validate-ledger.cjs 作共同基线。对照候选仅移入 f675b3a 的 validateMeta 函数及 validateLedger 中 standalone、mode 的计算与传递，保留原有 validateRoles 调用。将两个可选字段的缺省判断改为 !Object.hasOwn(meta, 字段名)，使直接模块调用显式传 undefined 时沿用原校验。缺陷候选只将传给 validateMeta 的 standalone 改为 ledger.meta?.standalone === true，保留 ut-entry 条件。两个候选分开投放，每次只给 prompt 与该组前后快照。",
+    "expected": ["缺陷候选定位到旧 CLI 的 --standalone 经 options.standalone 生效，元数据缺少 standalone 时却按完整台账校验，误拒省略字段的独立 ut-entry", "对照候选核对两种声明方式及其他 gate 的约束，按证据评价额外发现"],
+    "hard_failures": ["把两种 standalone 来源视为同一条已验证路径", "在正确候选上报告同一误拒问题"]
+  },
+  {
+    "id": "E4",
+    "category": "unavailable-project-contract",
+    "prompt": "一个适配器将释放时机移到 stop() 返回后。送审材料含适配层、回调注册和一个同步 mock。目标版本的驱动实现与 stop() 完成语义未提供。请审查该变更。",
+    "expected": ["定位资源最后一次可能被回调访问的时点，说明驱动是否等待在途回调会改变结论", "在结论中点明受影响的生命周期判断，以及能定案的目标版本契约或聚焦验证"],
+    "hard_failures": ["仅凭 mock 同步返回就宣称目标安全", "仅凭驱动材料缺失就断言已发生释放后访问"]
+  },
+  {
+    "id": "E5",
+    "category": "test-oracle",
+    "prompt": "批处理从每整百条结算一次改为满十条结算一次，尾批仍须保留。实现和测试生成预期批次时都调用同一个分组函数。请审查这次变更。",
+    "expected": ["从需求独立推导跨阈值且含尾批的具体输入与预期分组", "检查共享分组函数出错时哪些断言仍可通过，按看到的实现和独立断言区分功能缺陷与验证缺口"],
+    "hard_failures": ["以两个结果相等证明分组契约成立", "未经核对实现即断言生产代码丢失尾批"]
   },
   {
     "id": "O2",

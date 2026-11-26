@@ -1,4 +1,4 @@
 interface:
   display_name: "Xu Code Review"
-  short_description: "Git/SVN 多轴审查：需求、规范、可靠性与安全"
-  default_prompt: "使用 $xu-code-review 审查指定代码或改动，固定证据范围，按 Standards、Spec、Reliability & Safety 三轴取证，只读检查并输出风险分级与验证缺口。"
+  short_description: "审查 SVN 工作副本与修订、Git 工作树与提交的需求符合性及代码质量"
+  default_prompt: "使用 $xu-code-review 只读审查指定改动，按目标的 SVN 或 Git 基线取证，报告规范、需求、可靠性与安全方面的发现和验证缺口。"
